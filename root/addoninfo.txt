@@ -1,0 +1,9 @@
+"AddonInfo"
+{
+  addonSteamAppID   	550
+  addontitle		"Left 4 Lib"
+  addonversion	    	"1.0"
+  addonauthor 	   	"smilzo"
+  addonDescription  	"Just a small library with some shared VScript functions/classes"
+  addonContent_Script 	1
+}
