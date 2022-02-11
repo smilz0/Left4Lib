@@ -50,9 +50,28 @@ const EXTRA_S_LOUIS = 7;
 const BUTTON_ATTACK = 1;
 const BUTTON_JUMP = 2;
 const BUTTON_DUCK = 4;
+const BUTTON_FORWARD = 8;
+const BUTTON_BACK = 16;
 const BUTTON_USE = 32;
+const BUTTON_CANCEL = 64;
+const BUTTON_LEFT = 128;
+const BUTTON_RIGHT = 256;
+const BUTTON_MOVELEFT = 512;
+const BUTTON_MOVERIGHT = 1024;
 const BUTTON_SHOVE = 2048;
+const BUTTON_RUN = 4096;
 const BUTTON_RELOAD = 8192;
+const BUTTON_ALT1 = 16384;
+const BUTTON_ALT2 = 32768;
+const BUTTON_SCORE = 65536;
+const BUTTON_WALK = 131072;
+const BUTTON_ZOOM = 524288;
+const BUTTON_WEAPON1 = 1048576;
+const BUTTON_WEAPON2 = 2097152;
+const BUTTON_BULLRUSH = 4194304;
+const BUTTON_GRENADE1 = 8388608;
+const BUTTON_GRENADE2 = 16777216;
+const BUTTON_LOOKSPIN = 0x2000000;
 
 const DMG_GENERIC = 0;
 const DMG_CRUSH = 1;
@@ -92,6 +111,7 @@ const DMG_HEADSHOT = 1073741824;
 const DMG_DISMEMBER = 2147483648;
 
 const TRACE_MASK_ALL = -1;
+const TRACE_MASK_SOLID = 33570827;
 const TRACE_MASK_NPC_SOLID = 33701899;
 const TRACE_MASK_PLAYER_SOLID = 33636363;
 const TRACE_MASK_SHOT = 1174421507;
@@ -1946,6 +1966,81 @@ if (!("Left4Utils" in getroottable()))
 		DoEntFire("!self", "Kill", "", 0.1, null, ps);
 		
 		return true;
+	}
+	
+	/*
+		There is also a way to get the game's internal (C++) picker entity (but you can't filter by class):
+		
+		::DoNothing <- function ()
+		{
+		}
+
+		::GetPicker <- function ()
+		{
+			printl("self: " + self.GetClassname()); 			// self is the picker entity
+			printl("activator: " + activator.GetPlayerName());	// activator is the player entity
+			
+			// Do your stuff with self and activator
+		}
+
+		DoEntFire("!picker", "CallScriptFunction", "DoNothing", 0, player, player); // This is needed because the first time you call GetPicker on an entity, sometimes the activator variable doesn't exist yet
+		DoEntFire("!picker", "CallScriptFunction", "GetPicker", 0, player, player);
+		
+	*/
+	::Left4Utils.GetPickerEntity <- function (player, radius = 999999, threshold = 0.95, visibleOnly = true, entClass = null)
+	{
+		if (!player || !player.IsValid())
+			return null;
+		
+		local start = player.EyePosition();
+		local end = start + player.EyeAngles().Forward().Scale(radius);
+			
+		local m_trace = { start = start, end = end, ignore = player, mask = TRACE_MASK_SOLID };
+		TraceLine(m_trace);
+			
+		if (m_trace.hit && m_trace.enthit && m_trace.enthit.IsValid() && m_trace.enthit != player && m_trace.enthit.GetClassname() != "worldspawn" && (entClass == null || m_trace.enthit.GetClassname() == entClass))
+			return m_trace.enthit;
+
+		local bestDot = threshold;
+		local bestEnt = null;
+		local ent = null;
+		if (entClass == null)
+		{
+			while (ent = Entities.FindInSphere(ent, player.GetOrigin(), radius))
+			{
+				local facing = player.EyeAngles().Forward();
+				local toEnt = ent.GetCenter() - player.GetCenter();
+				toEnt.Norm();
+				local dot = facing.Dot(toEnt);
+				if (dot <= bestDot)
+					continue;
+				
+				if (NetProps.GetPropInt(ent, "m_hOwner") <= 0 && ent.GetModelName() != "" && ent.GetClassname() != "worldspawn" && (!visibleOnly || Left4Utils.CanTraceTo(player, ent)))
+				{
+					bestDot = dot;
+					bestEnt = ent;
+				}
+			}
+		}
+		else
+		{
+			while (ent = Entities.FindByClassnameWithin(ent, entClass, player.GetOrigin(), radius))
+			{
+				local facing = player.EyeAngles().Forward();
+				local toEnt = ent.GetCenter() - player.GetCenter();
+				toEnt.Norm();
+				local dot = facing.Dot(toEnt);
+				if (dot <= bestDot)
+					continue;
+				
+				if (NetProps.GetPropInt(ent, "m_hOwner") && (!visibleOnly || Left4Utils.CanTraceTo(player, ent)))
+				{
+					bestDot = dot;
+					bestEnt = ent;
+				}
+			}
+		}
+		return bestEnt;
 	}
 	
 	//
