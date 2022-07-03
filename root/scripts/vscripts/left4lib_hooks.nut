@@ -559,35 +559,146 @@ if (!("HooksHub" in getroottable()))
 
 		// Prevent duplicate calls from VSLib...
 		
+		// P.S. Also make sure to add the "g_ModeScript.XXX" and "g_MapScript.XXX" hooks regardless the addons loading order
+		//      If L4L is loaded AFTER Admin System then "g_ModeScript.XXX" and "g_MapScript.XXX" are already gone (but they're still in ModeXXX)
+		
 		if ("ModeInterceptChat" in g_ModeScript)
+		{
+			if (g_ModeScript.ModeInterceptChat != null && HooksHub.GetInterceptChatByFunc(g_ModeScript.ModeInterceptChat) == null)
+			{
+				HooksHub.SetInterceptChat("L4LMODE", g_ModeScript.ModeInterceptChat);
+					
+				printl("[HooksHub][DEBUG] Init - Added g_ModeScript InterceptChat (ModeInterceptChat) hook");
+			}
+
 			delete g_ModeScript.ModeInterceptChat;
+		}
 		if ("MapInterceptChat" in g_ModeScript)
+		{
+			if (g_ModeScript.MapInterceptChat != null && HooksHub.GetInterceptChatByFunc(g_ModeScript.MapInterceptChat) == null)
+			{
+				HooksHub.SetInterceptChat("L4LMAP", g_ModeScript.MapInterceptChat);
+					
+				printl("[HooksHub][DEBUG] Init - Added g_MapScript InterceptChat (MapInterceptChat) hook");
+			}
+			
 			delete g_ModeScript.MapInterceptChat;
+		}
 			
 		if ("ModeAllowTakeDamage" in g_ModeScript)
+		{
+			if (g_ModeScript.ModeAllowTakeDamage != null && HooksHub.GetAllowTakeDamageByFunc(g_ModeScript.ModeAllowTakeDamage) == null)
+			{
+				HooksHub.SetAllowTakeDamage("L4LMODE", g_ModeScript.ModeAllowTakeDamage);
+					
+				printl("[HooksHub][DEBUG] Init - Added g_ModeScript AllowTakeDamage (ModeAllowTakeDamage) hook");
+			}
+			
 			delete g_ModeScript.ModeAllowTakeDamage;
+		}
 		if ("MapAllowTakeDamage" in g_ModeScript)
+		{
+			if (g_ModeScript.MapAllowTakeDamage != null && HooksHub.GetAllowTakeDamageByFunc(g_ModeScript.MapAllowTakeDamage) == null)
+			{
+				HooksHub.SetAllowTakeDamage("L4LMAP", g_ModeScript.MapAllowTakeDamage);
+					
+				printl("[HooksHub][DEBUG] Init - Added g_MapScript AllowTakeDamage (MapAllowTakeDamage) hook");
+			}
+			
 			delete g_ModeScript.MapAllowTakeDamage;
+		}
 
 		if ("ModeAllowBash" in g_ModeScript)
+		{
+			if (g_ModeScript.ModeAllowBash != null && HooksHub.GetAllowBashByFunc(g_ModeScript.ModeAllowBash) == null)
+			{
+				HooksHub.SetAllowBash("L4LMODE", g_ModeScript.ModeAllowBash);
+					
+				printl("[HooksHub][DEBUG] Init - Added g_ModeScript AllowBash (ModeAllowBash) hook");
+			}
+			
 			delete g_ModeScript.ModeAllowBash;
+		}
 		if ("MapAllowBash" in g_ModeScript)
+		{
+			if (g_ModeScript.MapAllowBash != null && HooksHub.GetAllowBashByFunc(g_ModeScript.MapAllowBash) == null)
+			{
+				HooksHub.SetAllowBash("L4LMAP", g_ModeScript.MapAllowBash);
+					
+				printl("[HooksHub][DEBUG] Init - Added g_MapScript AllowBash (MapAllowBash) hook");
+			}
+			
 			delete g_ModeScript.MapAllowBash;
+		}
 			
 		if ("ModeUserConsoleCommand" in g_ModeScript)
+		{
+			if (g_ModeScript.ModeUserConsoleCommand != null && HooksHub.GetUserConsoleCommandByFunc(g_ModeScript.ModeUserConsoleCommand) == null)
+			{
+				HooksHub.SetUserConsoleCommand("L4LMODE", g_ModeScript.ModeUserConsoleCommand);
+					
+				printl("[HooksHub][DEBUG] Init - Added g_ModeScript UserConsoleCommand (ModeUserConsoleCommand) hook");
+			}
+			
 			delete g_ModeScript.ModeUserConsoleCommand;
+		}
 		if ("MapUserConsoleCommand" in g_ModeScript)
+		{
+			if (g_ModeScript.MapUserConsoleCommand != null && HooksHub.GetUserConsoleCommandByFunc(g_ModeScript.MapUserConsoleCommand) == null)
+			{
+				HooksHub.SetUserConsoleCommand("L4LMAP", g_ModeScript.MapUserConsoleCommand);
+					
+				printl("[HooksHub][DEBUG] Init - Added g_MapScript UserConsoleCommand (MapUserConsoleCommand) hook");
+			}
+			
 			delete g_ModeScript.MapUserConsoleCommand;
+		}
 			
 		if ("ModeBotQuery" in g_ModeScript)
+		{
+			if (g_ModeScript.ModeBotQuery != null && HooksHub.GetBotQueryByFunc(g_ModeScript.ModeBotQuery) == null)
+			{
+				HooksHub.SetBotQuery("L4LMODE", g_ModeScript.ModeBotQuery);
+					
+				printl("[HooksHub][DEBUG] Init - Added g_ModeScript BotQuery (ModeBotQuery) hook");
+			}
+			
 			delete g_ModeScript.ModeBotQuery;
+		}
 		if ("MapBotQuery" in g_ModeScript)
+		{
+			if (g_ModeScript.MapBotQuery != null && HooksHub.GetBotQueryByFunc(g_ModeScript.MapBotQuery) == null)
+			{
+				HooksHub.SetBotQuery("L4LMAP", g_ModeScript.MapBotQuery);
+					
+				printl("[HooksHub][DEBUG] Init - Added g_MapScript BotQuery (MapBotQuery) hook");
+			}
+			
 			delete g_ModeScript.MapBotQuery;
+		}
 			
 		if ("ModeCanPickupObject" in g_ModeScript)
+		{
+			if (g_ModeScript.ModeCanPickupObject != null && HooksHub.GetCanPickupObjectByFunc(g_ModeScript.ModeCanPickupObject) == null)
+			{
+				HooksHub.SetCanPickupObject("L4LMODE", g_ModeScript.ModeCanPickupObject);
+					
+				printl("[HooksHub][DEBUG] Init - Added g_ModeScript CanPickupObject (ModeCanPickupObject) hook");
+			}
+			
 			delete g_ModeScript.ModeCanPickupObject;
+		}
 		if ("MapCanPickupObject" in g_ModeScript)
+		{
+			if (g_ModeScript.MapCanPickupObject != null && HooksHub.GetCanPickupObjectByFunc(g_ModeScript.MapCanPickupObject) == null)
+			{
+				HooksHub.SetCanPickupObject("L4LMAP", g_ModeScript.MapCanPickupObject);
+					
+				printl("[HooksHub][DEBUG] Init - Added g_MapScript CanPickupObject (MapCanPickupObject) hook");
+			}
+			
 			delete g_ModeScript.MapCanPickupObject;
+		}
 	}
 	
 	printl("[HooksHub][INFO] HooksHub created");
