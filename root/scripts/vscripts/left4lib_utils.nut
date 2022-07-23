@@ -210,14 +210,44 @@ if (!("Left4Utils" in getroottable()))
 		return true;
 	}
 
-	::Left4Utils.LoadSettingsFromFile <- function (fileName, scope, logFunc)
+	::Left4Utils.FileToStringList <- function (fileName)
 	{
 		local fileContents = FileToString(fileName);
 		if (!fileContents)
+			return null;
+
+		fileContents = Left4Utils.StringReplace(fileContents, "\\r", "\n");
+		fileContents = Left4Utils.StringReplace(fileContents, "\\n\\n", "\n");   // Basically: any CRLF combination ("\n", "\r", "\r\n") becomes "\n"
+		
+		return split(fileContents, "\n");
+	}
+
+	::Left4Utils.StringListToFile <- function (fileName, stringList, sort = false)
+	{
+		if (!stringList)
 			return false;
 		
-		local settings = split(fileContents, "\r\n");
+		if (sort)
+			stringList.sort();
 		
+		local fileContents = "";
+		foreach(str in stringList)
+		{
+			if (fileContents == "")
+				fileContents = str;
+			else
+				fileContents += "\n" + str;
+		}
+		StringToFile(fileName, fileContents); // StringToFile seems to convert "\n" to the current OS CRLF char(s).
+		                                      // Infact it converts "\n" to "\r\n" on Windows - TODO: to confirm it's also the case on Linux and Mac
+	}
+
+	::Left4Utils.LoadSettingsFromFile <- function (fileName, scope, logFunc)
+	{
+		local settings = Left4Utils.FileToStringList(fileName);
+		if (!settings)
+			return false;
+
 		foreach (setting in settings)
 		{
 			setting = Left4Utils.StripComments(setting);
@@ -241,18 +271,15 @@ if (!("Left4Utils" in getroottable()))
 
 	::Left4Utils.SaveSettingsToFile <- function (fileName, settings, logFunc)
 	{
-		local settingList = "";
+		local settingList = [];
 		foreach(key, value in settings)
 		{
 			if (typeof(value) == "string")
 				value = "\"" + value + "\"";
 			
-			if (settingList == "")
-				settingList = key + " = " + value;
-			else
-				settingList += "\n" + key + " = " + value;
+			settingList.append(key + " = " + value);
 		}
-		StringToFile(fileName, settingList);
+		Left4Utils.StringListToFile(fileName, settingList, true);
 		
 		logFunc(LOG_LEVEL_INFO, "Settings saved");
 	}
@@ -272,11 +299,10 @@ if (!("Left4Utils" in getroottable()))
 	{
 		local ret = {};
 		
-		local fileContent = FileToString(fileName);
-		if (!fileContent)
+		local admins = Left4Utils.FileToStringList(fileName);
+		if (!admins)
 			return ret;
 		
-		local admins = split(fileContent, "\r\n");
 		foreach (admin in admins)
 		{
 			local values = split(admin, "//");
@@ -303,28 +329,20 @@ if (!("Left4Utils" in getroottable()))
 
 	::Left4Utils.SaveAdminsToFile <- function (fileName, admins)
 	{
-		local fileContent = "";
+		local adminList = [];
 		foreach (key, value in admins)
-		{
-			if (fileContent == "")
-				fileContent = key + " //" + value;
-			else
-				fileContent += "\r\n" + key + " //" + value;
-		}
-		StringToFile(fileName, fileContent);
+			adminList.append(key + " //" + value);
+		Left4Utils.StringListToFile(fileName, adminList, true);
 	}
 
 	::Left4Utils.LoadCvarsFromFile <- function (fileName, logFunc)
 	{
 		local count = 0;
-		local fileContents = FileToString(fileName);
-		if (fileContents == null)
-		{
-			logFunc(LOG_LEVEL_WARN, "Cvars file does not exist: " + fileName);
-			return count;
-		}
 
-		local cvars = split(fileContents, "\r\n");
+		local cvars = Left4Utils.FileToStringList(fileName);
+		if (!cvars)
+			return count;
+
 		foreach (cvar in cvars)
 		{
 			//logFunc(LOG_LEVEL_DEBUG, cvar);
@@ -939,6 +957,21 @@ if (!("Left4Utils" in getroottable()))
 		local item = Left4Utils.GetInventoryItemInSlot(survivor, slot);
 		if (item)
 			item.Kill();
+	}
+	
+	::Left4Utils.FindSlotForItemClass <- function (player, itemClass)
+	{
+		local inv = {};
+		GetInvTable(player, inv);
+		
+		for (local i = 0; i < 5; i++)
+		{
+			local slot = "slot" + i;
+			if ((slot in inv) && inv[slot] && inv[slot].GetClassname() == itemClass)
+				return slot;
+		}
+		
+		return null;
 	}
 	
 	::Left4Utils.BotCmdAttack <- function (bot, target)
@@ -1676,6 +1709,11 @@ if (!("Left4Utils" in getroottable()))
 		NetProps.SetPropInt(player, "m_afButtonForced", NetProps.GetPropInt(player, "m_afButtonForced") & (~button));
 	}
 	
+	::Left4Utils.IsButtonForced <- function (player, button)
+	{
+		return (NetProps.GetPropInt(player, "m_afButtonForced") & button) != 0;
+	}
+	
 	::Left4Utils.PlayerDisableButton <- function (player, button)
 	{
 		NetProps.SetPropInt(player, "m_afButtonDisabled", NetProps.GetPropInt(player, "m_afButtonDisabled") | button);
@@ -1684,6 +1722,11 @@ if (!("Left4Utils" in getroottable()))
 	::Left4Utils.PlayerEnableButton <- function (player, button)
 	{
 		NetProps.SetPropInt(player, "m_afButtonDisabled", NetProps.GetPropInt(player, "m_afButtonDisabled") & (~button));
+	}
+
+	::Left4Utils.IsButtonDisabled <- function (player, button)
+	{
+		return (NetProps.GetPropInt(player, "m_afButtonDisabled") & button) != 0;
 	}
 
 	// Returns the command and fills outArgs. If something is wrong returns null
