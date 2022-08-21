@@ -928,15 +928,20 @@ if (!("Left4Utils" in getroottable()))
 		return false;
 	}
 	
-	::Left4Utils.HasItem <- function (survivor, className)
+	::Left4Utils.GetInventoryItem <- function (survivor, className)
 	{
 		for (local i = 0; i < 5; i++)
 		{
 			local item = Left4Utils.GetInventoryItemInSlot(survivor, "slot" + i);
 			if (item && item.GetClassname() == className)
-				return true;
+				return item;
 		}
-		return false;
+		return null;
+	}
+	
+	::Left4Utils.HasItem <- function (survivor, className)
+	{
+		return (Left4Utils.GetInventoryItem(survivor, className) != null);
 	}
 
 	::Left4Utils.RemoveItem <- function (survivor, className)
@@ -2084,6 +2089,32 @@ if (!("Left4Utils" in getroottable()))
 			}
 		}
 		return bestEnt;
+	}
+	
+	::Left4Utils.SetItemSkin <- function (params)
+	{
+		local player = params["player"];
+		if (!player || !player.IsValid())
+			return;
+		
+		local itemClass = params["itemClass"];
+		local item = Left4Utils.GetInventoryItem(player, itemClass);
+		if (!item || !item.IsValid())
+			return;
+		
+		local skinNumber = params["skinNumber"];
+		NetProps.SetPropInt(item, "m_nSkin", skinNumber);
+	}
+	
+	::Left4Utils.GiveItemWithSkin <- function (player, itemClass, skinNumber)
+	{
+		if (!player || !player.IsValid())
+			return;
+		
+		//player.GiveItemWithSkin(itemClass, skinNumber);
+		
+		player.GiveItem(itemClass);
+		Left4Timers.AddTimer(null, 0.2, Left4Utils.SetItemSkin, { player = player, itemClass = itemClass, skinNumber = skinNumber }, false);
 	}
 	
 	//

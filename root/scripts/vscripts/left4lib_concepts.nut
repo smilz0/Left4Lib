@@ -44,11 +44,21 @@ if (!("ConceptsHub" in getroottable()))
 	
 	::ConceptsHub.ConceptFunc <- function (query)
 	{
+		local concept = "";
+		foreach(key, val in query)
+		{
+			if (key.tolower() == "concept")
+			{
+				concept = val;
+				break;
+			}
+		}
+		
 		foreach (key, func in ::ConceptsHub.Handlers)
 		{
 			try
 			{
-				func(query.concept, query);
+				func(concept, query);
 			}
 			catch(exception)
 			{
