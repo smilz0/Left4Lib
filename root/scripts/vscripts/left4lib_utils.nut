@@ -559,7 +559,7 @@ if (!("Left4Utils" in getroottable()))
 		local i = -1;
 		while (ent = Entities.FindByClassname(ent, "player"))
 		{
-			if (ent.IsValid() && !ent.IsDead() && !ent.IsDying() && (ent.IsIncapacitated() || ent.IsHangingFromLedge()) && ent.IsSurvivor() && (team == 0 || NetProps.GetPropInt(ent, "m_iTeamNum") == team))
+			if (ent.IsValid() && !ent.IsDead() && !ent.IsDying() && ent.IsIncapacitated() && ent.IsSurvivor() && (team == 0 || NetProps.GetPropInt(ent, "m_iTeamNum") == team))
 				t[++i] <- ent;
 		}
 		return t;
@@ -928,6 +928,15 @@ if (!("Left4Utils" in getroottable()))
 		return false;
 	}
 	
+	::Left4Utils.HasLaserSight <- function (survivor)
+	{
+		local item = Left4Utils.GetInventoryItemInSlot(survivor, INV_SLOT_PRIMARY);
+		if (item && (NetProps.GetPropInt(item, "m_upgradeBitVec") & 4) > 0)
+			return true;
+		
+		return false;
+	}
+	
 	::Left4Utils.GetInventoryItem <- function (survivor, className)
 	{
 		for (local i = 0; i < 5; i++)
@@ -1076,6 +1085,21 @@ if (!("Left4Utils" in getroottable()))
 		return 0;
 	}
 
+	::Left4Utils.GetPrimaryAmmoPercent <- function (survivor)
+	{
+		if (!survivor || !survivor.IsValid())
+			return 0.0;
+		
+		local w = Left4Utils.GetInventoryItemInSlot(survivor, INV_SLOT_PRIMARY);
+		if (!w || !w.IsValid())
+			return 0.0;
+		
+		local ammoType = NetProps.GetPropInt(w, "m_iPrimaryAmmoType");
+		local max = Left4Utils.GetMaxAmmo(ammoType) + w.GetMaxClip1();
+		local ammo = NetProps.GetPropIntArray(survivor, "m_iAmmo", ammoType) + w.Clip1();
+		return ((100.0 / max) * ammo);
+	}
+
 	::Left4Utils.DamageContains <- function (damageType, containsType)
 	{
 		return (damageType & containsType) != 0;
@@ -1184,6 +1208,23 @@ if (!("Left4Utils" in getroottable()))
 		return true;
 	}
 	
+	::Left4Utils.CanTraceToEntPos <- function (source, dest, pos, mask = TRACE_MASK_SHOT, maxDist = 0)
+	{
+		local start = source.EyePosition();
+		local end = pos;
+		local traceTable = { start = start, end = end + (end - start), ignore = source, mask = mask };
+		
+		TraceLine(traceTable);
+		
+		if (!traceTable.hit || traceTable.enthit != dest)
+			return false;
+		
+		if (maxDist && (traceTable.pos - start).Length() > maxDist)
+			return false;
+		
+		return true;
+	}
+	
 	::Left4Utils.CanTraceToPos <- function (source, pos, mask = TRACE_MASK_SHOT)
 	{
 		local traceTable = { start = source.EyePosition(), end = pos, ignore = source, mask = mask };
@@ -1274,6 +1315,15 @@ if (!("Left4Utils" in getroottable()))
 		}
 		
 		return QAngle(pitch, yaw, 0);
+	}
+
+	::Left4Utils.GetDiffAngle <- function (angle1, angle2)
+	{
+		local phi = abs(angle1 - angle2) % 360;
+		local d = phi > 180 ? 360 - phi : phi;
+		local s = ((angle1 - angle2) >= 0 && (angle1 - angle2) <= 180) || ((angle1 - angle2) <= -180 && (angle1 - angle2) >= -360) ? 1.0 : -1.0;
+		
+		return (d * s);
 	}
 
 	// target can be either a vector or an entity

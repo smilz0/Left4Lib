@@ -25,7 +25,7 @@ if (!("ConceptsHub" in getroottable()))
 			if ("matchonce" in parms && parms.matchonce)
 				matchonce = true;
 		}
-		permitrepeats = false;
+		permitrepeats = true;
 		sequential = false;
 		norepeat = false;
 		matchonce = false;
@@ -71,7 +71,7 @@ if (!("ConceptsHub" in getroottable()))
 	
 	local criterion = [ CriterionFunc("ConceptsHub", ConceptsHub.ConceptFunc) ];
 	local responses = [ { scenename = "" } ];
-	local group_params = ConceptsHub.GroupParams({ permitrepeats = false, sequential = false, norepeat = false, matchonce = false });
+	local group_params = ConceptsHub.GroupParams({ permitrepeats = true, sequential = false, norepeat = false, matchonce = false });
 
 	local rule = RRule("ConceptsHub", criterion, responses, group_params);
 
