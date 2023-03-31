@@ -120,6 +120,18 @@ const TRACE_MASK_VISION = 33579073;
 const TRACE_MASK_VISIBLE = 24705;
 const TRACE_MASK_SOLID_BRUSHONLY = 16395;
 
+const NAVAREA_SPAWNATTR_BATTLESTATION = 32;
+const NAVAREA_SPAWNATTR_FINALE = 64;
+const NAVAREA_SPAWNATTR_PLAYER_START = 128;
+const NAVAREA_SPAWNATTR_CHECKPOINT = 2048;
+const NAVAREA_SPAWNATTR_RESCUE_VEHICLE = 32768;
+const NAVAREA_SPAWNATTR_ESCAPE_ROUTE = 131072;
+
+const NAVAREA_DIR_NORTH = 0;
+const NAVAREA_DIR_EAST = 1;
+const NAVAREA_DIR_SOUTH = 2;
+const NAVAREA_DIR_WEST = 3;
+
 const WITCH_ANIM_DUCKING = 4;
 const WITCH_ANIM_DUCKING_ANGRY = 27;
 
@@ -939,10 +951,11 @@ if (!("Left4Utils" in getroottable()))
 	
 	::Left4Utils.GetInventoryItem <- function (survivor, className)
 	{
-		for (local i = 0; i < 5; i++)
+		local inv = {};
+		GetInvTable(survivor, inv);
+		foreach(slot, item in inv)
 		{
-			local item = Left4Utils.GetInventoryItemInSlot(survivor, "slot" + i);
-			if (item && item.GetClassname() == className)
+			if (item.GetClassname() == className)
 				return item;
 		}
 		return null;
@@ -953,26 +966,6 @@ if (!("Left4Utils" in getroottable()))
 		return (Left4Utils.GetInventoryItem(survivor, className) != null);
 	}
 
-	::Left4Utils.RemoveItem <- function (survivor, className)
-	{
-		for (local i = 0; i < 5; i++)
-		{
-			local item = Left4Utils.GetInventoryItemInSlot(survivor, "slot" + i);
-			if (item && item.GetClassname() == className)
-			{
-				item.Kill();
-				return;
-			}
-		}
-	}
-	
-	::Left4Utils.RemoveItemBySlot <- function (survivor, slot)
-	{
-		local item = Left4Utils.GetInventoryItemInSlot(survivor, slot);
-		if (item)
-			item.Kill();
-	}
-	
 	::Left4Utils.FindSlotForItemClass <- function (player, itemClass)
 	{
 		local inv = {};
@@ -1023,7 +1016,12 @@ if (!("Left4Utils" in getroottable()))
 		local inv = {};
 		GetInvTable(player, inv);
 		if (slot in inv)
+		{
+			// Without the DropItem, the vanilla AI will bug out and will still think that the item is in the inventory (or something like that)
+			// This bug can be seen by removing the medkit from the bots (Kill without DropItem), give them a defib and hurt them enough to make them heal. They will try to heal with the defib and get stuck
+			player.DropItem(inv[slot].GetClassname());
 			inv[slot].Kill();
+		}
 	}
 	
 	::Left4Utils.RemoveInventoryItem <- function (player, itemclass)
@@ -1033,7 +1031,12 @@ if (!("Left4Utils" in getroottable()))
 		foreach(slot, item in inv)
 		{
 			if (item.GetClassname() == itemclass)
+			{
+				// Without the DropItem, the vanilla AI will bug out and will still think that the item is in the inventory (or something like that)
+				// This bug can be seen by removing the medkit from the bots (Kill without DropItem), give them a defib and hurt them enough to make them heal. They will try to heal with the defib and get stuck
+				player.DropItem(itemclass);
 				item.Kill();
+			}
 		}
 	}
 	
@@ -1116,7 +1119,8 @@ if (!("Left4Utils" in getroottable()))
 		local start = pos;
 		local end = start - Vector(0, 0, maxHeight);
 		
-		local traceTable = { start = start, end = end, mask = TRACE_MASK_SHOT };
+		//local traceTable = { start = start, end = end, mask = TRACE_MASK_SHOT };
+		local traceTable = { start = start, end = end, mask = TRACE_MASK_SOLID };
 		TraceLine(traceTable);
 		
 		local valid = false;
@@ -1754,6 +1758,18 @@ if (!("Left4Utils" in getroottable()))
 		// TODO
 	}
 
+	::Left4Utils.FreezePlayer <- function (player)
+	{
+		if (player && player.IsValid())
+			NetProps.SetPropInt(player, "m_fFlags", NetProps.GetPropInt(player, "m_fFlags") | (1 << 5)); // set FL_FROZEN
+	}
+
+	::Left4Utils.UnfreezePlayer <- function (player)
+	{
+		if (player && player.IsValid())
+			NetProps.SetPropInt(player, "m_fFlags", NetProps.GetPropInt(player, "m_fFlags") & ~(1 << 5)); // unset FL_FROZEN
+	}
+
 	::Left4Utils.PlayerForceButton <- function (player, button)
 	{
 		NetProps.SetPropInt(player, "m_afButtonForced", NetProps.GetPropInt(player, "m_afButtonForced") | button);
@@ -1782,6 +1798,25 @@ if (!("Left4Utils" in getroottable()))
 	::Left4Utils.IsButtonDisabled <- function (player, button)
 	{
 		return (NetProps.GetPropInt(player, "m_afButtonDisabled") & button) != 0;
+	}
+
+	// Force the given player to hold down the given button for holdTime seconds
+	// destination can be either an entity or a vector and it's where the player will look at while pressing the button, with a pitch/yaw delta given by deltaPitch and deltaYaw
+	// lockLook = true means that the player will be frozen for a duration of holdTime+unlockLookDelay seconds to make sure it will keep the given lookat direction for the entire button press duration
+	::Left4Utils.PlayerPressButton <- function (player, button, holdTime = 0.05, destination = null, deltaPitch = 0, deltaYaw = 0, lockLook = false, unlockLookDelay = 0)
+	{
+		if (lockLook)
+		{
+			NetProps.SetPropInt(player, "m_fFlags", NetProps.GetPropInt(player, "m_fFlags") | (1 << 5)); // set FL_FROZEN
+			Left4Timers.AddTimer(null, holdTime + unlockLookDelay, @(params) Left4Utils.UnfreezePlayer(params.player), { player = player });
+		}
+		
+		if (destination != null || deltaPitch != 0 || deltaYaw != 0)
+			Left4Utils.BotLookAt(player, destination, deltaPitch, deltaYaw);
+		
+		Left4Utils.PlayerForceButton(player, button);
+		
+		Left4Timers.AddTimer(null, holdTime, @(params) Left4Utils.PlayerUnForceButton(params.player, params.button), { player = player, button = button });
 	}
 
 	// Returns the command and fills outArgs. If something is wrong returns null
@@ -1839,24 +1874,33 @@ if (!("Left4Utils" in getroottable()))
 			
 			// Merge with main table
 			foreach (key, val in a)
-				table["area" + table.len()] <- val;
+				table[val.GetID()] <- val;
+		}
+	}
+
+	::Left4Utils.GetAllLaddersOfArea <- function (area, table)
+	{
+		if (!area)
+			return;
+		
+		for (local dir = 0; dir < 4; dir++)
+		{
+			local a = {};
+			area.GetLadders(dir, a);
+			
+			// Merge with main table
+			foreach (key, val in a)
+				table[val.GetID()] <- val;
 		}
 	}
 
 	::Left4Utils.FindMapAreas <- function (table)
 	{
-		local CHECKPOINT = 1 << 11; // 2048
-		local BATTLESTATION = 1 << 5; // 32
-		local PLAYER_START = 1 << 7; // 128
-		local FINALE = 1 << 6; // 64
-		local RESCUE_VEHICLE = 1 << 15; // 32768
-		local ESCAPE_ROUTE = 1 << 17; // 131072
-
 		local function HasAdjacentESCAPE_ROUTE(adjacentareas)
 		{
 			foreach (k, adjacent in adjacentareas)
 			{
-				if (adjacent.HasSpawnAttributes(ESCAPE_ROUTE))
+				if (adjacent.HasSpawnAttributes(NAVAREA_SPAWNATTR_ESCAPE_ROUTE))
 					return true;
 			}
 			return false;
@@ -1877,13 +1921,13 @@ if (!("Left4Utils" in getroottable()))
 		
 		foreach (area in areas)
 		{
-			if (((area.HasSpawnAttributes(CHECKPOINT) || area.HasSpawnAttributes(PLAYER_START) || (area.HasSpawnAttributes(FINALE) && area.HasSpawnAttributes(ESCAPE_ROUTE))) && !area.IsBlocked(TEAM_SURVIVORS, true)) || area.HasSpawnAttributes(RESCUE_VEHICLE))
+			if (((area.HasSpawnAttributes(NAVAREA_SPAWNATTR_CHECKPOINT) || area.HasSpawnAttributes(NAVAREA_SPAWNATTR_PLAYER_START) || (area.HasSpawnAttributes(NAVAREA_SPAWNATTR_FINALE) && area.HasSpawnAttributes(NAVAREA_SPAWNATTR_ESCAPE_ROUTE))) && !area.IsBlocked(TEAM_SURVIVORS, true)) || area.HasSpawnAttributes(NAVAREA_SPAWNATTR_RESCUE_VEHICLE))
 			{
 				local areaflow = GetFlowDistanceForPosition(area.GetCenter());
 				local adjacentareas = {};
 				Left4Utils.GetAllAdjacentAreas(area, adjacentareas);
 				
-				if (area.HasSpawnAttributes(CHECKPOINT) || area.HasSpawnAttributes(PLAYER_START))
+				if (area.HasSpawnAttributes(NAVAREA_SPAWNATTR_CHECKPOINT) || area.HasSpawnAttributes(NAVAREA_SPAWNATTR_PLAYER_START))
 				{
 					if (HasAdjacentESCAPE_ROUTE(adjacentareas) && (table["checkpointA"] == null || areaflow < checkpointAflow))
 					{
@@ -1892,12 +1936,12 @@ if (!("Left4Utils" in getroottable()))
 					}
 				}
 				
-				if (area.HasSpawnAttributes(CHECKPOINT))
+				if (area.HasSpawnAttributes(NAVAREA_SPAWNATTR_CHECKPOINT))
 				{
 					foreach (k, adjacent in adjacentareas)
 					{
 						local adjacentflow = GetFlowDistanceForPosition(adjacent.GetCenter());
-						if (!adjacent.HasSpawnAttributes(CHECKPOINT) && adjacent.HasSpawnAttributes(ESCAPE_ROUTE) && (table["checkpointB"] == null || adjacentflow > checkpointBflow))
+						if (!adjacent.HasSpawnAttributes(NAVAREA_SPAWNATTR_CHECKPOINT) && adjacent.HasSpawnAttributes(NAVAREA_SPAWNATTR_ESCAPE_ROUTE) && (table["checkpointB"] == null || adjacentflow > checkpointBflow))
 						{
 							table["checkpointB"] <- adjacent;
 							checkpointBflow = adjacentflow;
@@ -1905,7 +1949,7 @@ if (!("Left4Utils" in getroottable()))
 					}
 				}
 				
-				if (area.HasSpawnAttributes(FINALE) && area.HasSpawnAttributes(ESCAPE_ROUTE))
+				if (area.HasSpawnAttributes(NAVAREA_SPAWNATTR_FINALE) && area.HasSpawnAttributes(NAVAREA_SPAWNATTR_ESCAPE_ROUTE))
 				{
 					if (table["finale"] == null || areaflow > finaleflow)
 					{
@@ -1914,12 +1958,12 @@ if (!("Left4Utils" in getroottable()))
 					}
 				}
 				
-				if (area.HasSpawnAttributes(RESCUE_VEHICLE))
+				if (area.HasSpawnAttributes(NAVAREA_SPAWNATTR_RESCUE_VEHICLE))
 				{
 					foreach (k, adjacent in adjacentareas)
 					{
 						local adjacentflow = GetFlowDistanceForPosition(adjacent.GetCenter());
-						if (!adjacent.HasSpawnAttributes(RESCUE_VEHICLE) && (table["rescueVehicle"] == null || adjacentflow > rescueVehicleflow))
+						if (!adjacent.HasSpawnAttributes(NAVAREA_SPAWNATTR_RESCUE_VEHICLE) && (table["rescueVehicle"] == null || adjacentflow > rescueVehicleflow))
 						{
 							table["rescueVehicle"] <- adjacent;
 							rescueVehicleflow = adjacentflow;
@@ -1943,6 +1987,245 @@ if (!("Left4Utils" in getroottable()))
 		local changelevel = Entities.FindByClassname(null, "info_changelevel");
 		if (!changelevel)
 			table["checkpointB"] <- null;
+	}
+	
+	// Returns the nearest nav area, with the ESCAPE_ROUTE spawn flag, from the given survivor
+	::Left4Utils.GetNearestEscapeRouteArea <- function (survivor)
+	{
+		local survFlow = GetFlowPercentForPosition(survivor.GetOrigin(), false);
+		local nearestArea = null;
+		local nearestFlow = 10000000;
+		
+		local areas = {};
+		NavMesh.GetAllAreas(areas);
+		foreach (area in areas)
+		{
+			if (area.HasSpawnAttributes(NAVAREA_SPAWNATTR_ESCAPE_ROUTE))
+			{
+				local flow = abs(GetFlowPercentForPosition(area.GetCenter(), false) - survFlow);
+				if (flow < nearestFlow)
+				{
+					nearestFlow = flow;
+					nearestArea = area;
+				}
+			}
+		}
+		return nearestArea;
+	}
+	
+	// Returns the next area (following the map's flow) connected to the given area
+	// checkGround = true to perform an additional trace check on the ground
+	::Left4Utils.GetNextAreaInFlow <- function (area, checkGround = false)
+	{
+		local nextArea = null;
+		local nextFlow = GetFlowPercentForPosition(area.GetCenter(), false);
+		for (local dir = 0; dir < 4; dir++)
+		{
+			local areas = {};
+			area.GetAdjacentAreas(dir, areas);
+			foreach (a in areas)
+			{
+				local flow = GetFlowPercentForPosition(a.GetCenter(), false);
+				if (/*a.HasSpawnAttributes(NAVAREA_SPAWNATTR_ESCAPE_ROUTE) &&*/ flow > nextFlow && !a.IsBlocked(TEAM_SURVIVORS, false) && (!checkGround || Left4Utils.FindGroundFrom(a.GetCenter() + Vector(0, 0, 20), 240, 0).valid) && CheckAreasZDiff(area, a)) // Avoid areas that are too high or too low to jump on
+				{
+					nextFlow = flow;
+					nextArea = a;
+				}
+			}
+		}
+		return nextArea;
+	}
+	
+	// Returns the next area (following the map's flow) connected to the given area via ladder
+	// checkGround = true to perform an additional trace check on the ground
+	::Left4Utils.GetNextLadderAreaInFlow <- function (area, checkGround = false)
+	{
+		local nextArea = null;
+		local areaFlow = GetFlowPercentForPosition(area.GetCenter(), false);
+		local nextFlow = areaFlow
+		for (local dir = 0; dir < 4; dir++)
+		{
+			local ladders = {};
+			area.GetLadders(dir, ladders);
+			foreach (ladder in ladders)
+			{
+				if (ladder.IsUsableByTeam(TEAM_SURVIVORS))
+				{
+					// Apparently GetTopArea and GetBottomArea can be null so they aren't reliable
+					//local otherArea = ladder.GetTopArea();
+					//if (!otherArea || otherArea.GetID() == area.GetID())
+					//	otherArea = ladder.GetBottomArea();
+					
+					local otherArea = Left4Utils.GetNearestLadderArea(ladder, false);
+					if (!otherArea || otherArea.GetID() == area.GetID())
+						otherArea = Left4Utils.GetNearestLadderArea(ladder, true);
+					
+					if (otherArea)
+					{
+						local flow = GetFlowPercentForPosition(otherArea.GetCenter(), false);
+						if (/*otherArea.HasSpawnAttributes(NAVAREA_SPAWNATTR_ESCAPE_ROUTE) &&*/ flow > nextFlow && !otherArea.IsBlocked(TEAM_SURVIVORS, false) && (!checkGround || Left4Utils.FindGroundFrom(otherArea.GetCenter() + Vector(0, 0, 20), 240, 0).valid))
+						{
+							nextFlow = flow;
+							nextArea = otherArea;
+						}
+					}
+				}
+			}
+		}
+		return nextArea;
+	}
+	
+	// Search the area, connected to the given ladder, which is closer to the top (top = true) or bottom (top = false) of the ladder
+	::Left4Utils.GetNearestLadderArea <- function (ladder, top = false)
+	{
+		local function HasLadderWithID(area, ladderID)
+		{
+			for (local dir = 0; dir < 4; dir++)
+			{
+				local ladders = {};
+				area.GetLadders(dir, ladders);
+				foreach (ladder in ladders)
+				{
+					if (ladder.GetID() == ladderID)
+						return true;
+				}
+			}
+			return false;
+		}
+		
+		local area = null;
+		if (top)
+			area = ladder.GetTopArea();
+		else
+			area = ladder.GetBottomArea();
+
+		if (area)
+			return area; // We're lucky, we can just use GetTopArea/GetBottomArea
+
+		local orig = null;
+		if (top)
+			orig = ladder.GetTopOrigin();
+		else
+			orig = ladder.GetBottomOrigin();
+		
+		local ret = null;
+		local minZDiff = 1000000;
+		local areas = {};
+		NavMesh.GetNavAreasInRadius(orig, 200, areas);
+		foreach (area in areas)
+		{
+			if (HasLadderWithID(area, ladder.GetID()))
+			{
+				// Nearest area is calculated on the Z axis (height) only
+				local zDiff = abs(orig.z - area.GetCenter().z);
+				if (zDiff < minZDiff)
+				{
+					ret = area;
+					minZDiff = zDiff;
+				}
+			}
+		}
+		
+		return ret;
+	}
+	
+	// Find the 2 closest corners of the given adjacent nav areas and calculate the height difference between the 2 points.
+	// Returns whether the height difference is not too much in order for a survivor to be able to jump on it or to drop from it without damage.
+	// maxClimbHeight = 66 and maxDropHeight = 240 defaults are the same defaults of the nav_flow_max_survivor_climb_height and nav_flow_max_survivor_drop_height cvars
+	::Left4Utils.CheckAreasZDiff <- function (areaFrom, areaTo, maxClimbHeight = 66, maxDropHeight = 240)
+	{
+		local closestCornerFrom = null;
+		local closestCornerTo = null;
+		local closestDist = 100000000;
+		
+		for (local c1 = 0; c1 < 4; c1++)
+		{
+			local cornerFrom = areaFrom.GetCorner(c1);
+			for (local c2 = 0; c2 < 4; c2++)
+			{
+				local cornerTo = areaTo.GetCorner(c2);
+				local d = (cornerTo - cornerFrom).Length();
+				
+				if (d < closestDist)
+				{
+					closestCornerFrom = cornerFrom;
+					closestCornerTo = cornerTo;
+					closestDist = d;
+				}
+			}
+		}
+		
+		local zDiff = closestCornerTo.z - closestCornerFrom.z;
+		return (zDiff <= maxClimbHeight && zDiff >= -maxDropHeight);
+	}
+	
+	// Returns the farthest (in the map's flow) pathable position
+	// limitDistance > 0 to limit the calculated path (and so the returned farthest position) to this max (roughly) distance from the survivor's current position
+	// checkGround = true to perform an additional trace check on the ground
+	// debugDrawDuration > 0 to draw the entire calculated path on screen (only visible to the host) for the given amount of time
+	::Left4Utils.GetFarthestPathableFlowPos <- function (survivor, limitDistance = 0, checkGround = false, debugDrawDuration = 0)
+	{
+		local survOrigin = survivor.GetOrigin();
+		local survDist = GetFlowDistanceForPosition(survOrigin);
+		
+		//local currentArea = Left4Utils.GetNearestEscapeRouteArea(survivor);
+		//local currentArea = NavMesh.GetNavArea(survOrigin, 30);
+		//local currentArea = NavMesh.GetNearestNavArea(survOrigin, 200, true, true);
+		local currentArea = survivor.GetLastKnownArea();
+		if (!currentArea)
+		{
+			if (debugDrawDuration > 0)
+				DebugDrawCircle(survOrigin, Vector(255, 0, 0), 255, 10, true, debugDrawDuration);
+			
+			return survOrigin;
+		}
+		
+		
+		//if (limitDistance > 0 && (currentArea.GetCenter() - survOrigin).Length() >= limitDistance)
+		if (limitDistance > 0 && abs(GetFlowDistanceForPosition(currentArea.GetCenter()) - survDist) >= limitDistance)
+		{
+			if (debugDrawDuration > 0)
+				DebugDrawCircle(currentArea.GetCenter(), Vector(255, 0, 0), 255, 10, true, debugDrawDuration);
+			
+			return currentArea.GetCenter();
+		}
+		
+		if (debugDrawDuration > 0)
+			//currentArea.DebugDrawFilled(0, 255, 0, 255, debugDrawDuration, true);
+			DebugDrawCircle(currentArea.GetCenter(), Vector(0, 255, 0), 255, 10, true, debugDrawDuration);
+
+		local nextArea = Left4Utils.GetNextAreaInFlow(currentArea, checkGround);
+		if (!nextArea)
+			nextArea = Left4Utils.GetNextLadderAreaInFlow(currentArea, checkGround);
+		
+		while (nextArea)
+		{
+			if (debugDrawDuration > 0)
+				DebugDrawLine_vCol(currentArea.GetCenter(), nextArea.GetCenter(), Vector(0, 255, 255), true, debugDrawDuration);
+			
+			currentArea = nextArea;
+			//if (limitDistance > 0 && (currentArea.GetCenter() - survOrigin).Length() >= limitDistance)
+			if (limitDistance > 0 && abs(GetFlowDistanceForPosition(currentArea.GetCenter()) - survDist) >= limitDistance)
+				nextArea = null;
+			else
+			{
+				nextArea = Left4Utils.GetNextAreaInFlow(currentArea, checkGround);
+				if (!nextArea)
+					nextArea = Left4Utils.GetNextLadderAreaInFlow(currentArea, checkGround);
+			}
+			
+			if (debugDrawDuration > 0)
+			{
+				if (nextArea)
+					//currentArea.DebugDrawFilled(0, 255, 255, 255, debugDrawDuration, true);
+					DebugDrawCircle(currentArea.GetCenter(), Vector(0, 255, 255), 255, 10, true, debugDrawDuration);
+				else
+					//currentArea.DebugDrawFilled(255, 0, 0, 255, debugDrawDuration, true);
+					DebugDrawCircle(currentArea.GetCenter(), Vector(255, 0, 0), 255, 10, true, debugDrawDuration);
+			}
+		}
+		
+		return currentArea.GetCenter();
 	}
 	
 	::Left4Utils.PrintStackTrace <- function ()
@@ -2110,13 +2393,13 @@ if (!("Left4Utils" in getroottable()))
 				local toEnt = ent.GetCenter() - player.GetCenter();
 				toEnt.Norm();
 				local dot = facing.Dot(toEnt);
-				if (dot <= bestDot)
-					continue;
-				
-				if (NetProps.GetPropInt(ent, "m_hOwner") <= 0 && ent.GetModelName() != "" && ent.GetClassname() != "worldspawn" && (!visibleOnly || Left4Utils.CanTraceTo(player, ent)))
+				if (dot > bestDot)
 				{
-					bestDot = dot;
-					bestEnt = ent;
+					if (NetProps.GetPropInt(ent, "m_hOwner") <= 0 && ent.GetModelName() != "" && ent.GetClassname() != "worldspawn" && (!visibleOnly || Left4Utils.CanTraceTo(player, ent)))
+					{
+						bestDot = dot;
+						bestEnt = ent;
+					}
 				}
 			}
 		}
@@ -2128,13 +2411,13 @@ if (!("Left4Utils" in getroottable()))
 				local toEnt = ent.GetCenter() - player.GetCenter();
 				toEnt.Norm();
 				local dot = facing.Dot(toEnt);
-				if (dot <= bestDot)
-					continue;
-				
-				if (NetProps.GetPropInt(ent, "m_hOwner") && (!visibleOnly || Left4Utils.CanTraceTo(player, ent)))
+				if (dot > bestDot)
 				{
-					bestDot = dot;
-					bestEnt = ent;
+					if (NetProps.GetPropInt(ent, "m_hOwner") && (!visibleOnly || Left4Utils.CanTraceTo(player, ent)))
+					{
+						bestDot = dot;
+						bestEnt = ent;
+					}
 				}
 			}
 		}
