@@ -81,6 +81,3 @@ if (!("ConceptsHub" in getroottable()))
 	else
 		error("[ConceptsHub][ERROR] Failed to add decision rule!!!\n");
 }
-
-
-

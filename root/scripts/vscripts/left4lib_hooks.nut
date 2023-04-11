@@ -701,16 +701,16 @@ if (!("HooksHub" in getroottable()))
 		}
 	}
 	
-	printl("[HooksHub][INFO] HooksHub created");
-}
+	::HooksHub.Events.OnGameEvent_round_start <- function (params)
+	{
+		//printl("[HooksHub][DEBUG] OnGameEvent_round_start");
 
-::HooksHub.Events.OnGameEvent_round_start <- function (params)
-{
-	//printl("[HooksHub][DEBUG] OnGameEvent_round_start");
-
-	HooksHub.Init();
+		HooksHub.Init();
+		
+		HooksHub.DbgPrintFuncs();
+	}
 	
-	HooksHub.DbgPrintFuncs();
+	printl("[HooksHub][INFO] HooksHub created");
 }
 
 __CollectEventCallbacks(::HooksHub.Events, "OnGameEvent_", "GameEventCallbacks", RegisterScriptGameEventListener);
