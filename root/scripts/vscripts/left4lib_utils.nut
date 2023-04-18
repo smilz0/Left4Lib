@@ -1754,9 +1754,45 @@ if (!("Left4Utils" in getroottable()))
 		return true;
 	}
 
-	::Left4Utils.SpeakScene <- function (player, scene)
+	::Left4Utils.SpeakScene <- function (player, scene, actor = null)
 	{
-		// TODO
+		if (!player || !player.IsValid())
+			return false;
+		
+		local Actor = actor;
+		if (!Actor)
+			Actor = Left4Utils.GetActorFromSurvivor(player);
+
+		if (!Actor)
+			return false;
+
+		local Scene = scene;
+		if (!Scene)
+			return false;
+		
+		if (Scene.find("scenes") == null)
+			Scene = "scenes/" + Actor + "/" + Scene;
+		
+		if (Scene.find(".vcd") == null)
+			Scene += ".vcd";
+		
+		//Scene = Scene.tolower();
+		
+		local criterion = [::g_rr.Criterion("Concept", "L4UScene", "L4UScene"), ::g_rr.Criterion("Coughing", 0, 0), ::g_rr.Criterion("Who", Actor, Actor)];
+		local responses = [ ::g_rr.ResponseSingle(3, Scene, null, null, { scenename = Scene }) ];
+		local group_params = ::g_rr.RGroupParams({ permitrepeats = true, sequential = false, norepeat = false, matchonce = false });
+
+		local r = ::g_rr.RRule("L4UScene", criterion, responses, group_params);
+		r.responses[0].rule = r;
+
+		//Decider().AddRule(r);
+
+		if (!rr_AddDecisionRule(r))
+			return false;
+
+		QueueSpeak(player, "L4UScene", 0.0, "");
+		
+		return true;
 	}
 
 	::Left4Utils.FreezePlayer <- function (player)
@@ -1924,7 +1960,7 @@ if (!("Left4Utils" in getroottable()))
 		{
 			if (((area.HasSpawnAttributes(NAVAREA_SPAWNATTR_CHECKPOINT) || area.HasSpawnAttributes(NAVAREA_SPAWNATTR_PLAYER_START) || (area.HasSpawnAttributes(NAVAREA_SPAWNATTR_FINALE) && area.HasSpawnAttributes(NAVAREA_SPAWNATTR_ESCAPE_ROUTE))) && !area.IsBlocked(TEAM_SURVIVORS, true)) || area.HasSpawnAttributes(NAVAREA_SPAWNATTR_RESCUE_VEHICLE))
 			{
-				local areaflow = GetFlowDistanceForPosition(area.GetCenter());
+				local areaflow = GetFlowDistanceForPosition(area.GetCenter());  // TODO: better use GetFlowPercentForPosition
 				local adjacentareas = {};
 				Left4Utils.GetAllAdjacentAreas(area, adjacentareas);
 				
@@ -2016,7 +2052,7 @@ if (!("Left4Utils" in getroottable()))
 	
 	// Returns the next area (following the map's flow) connected to the given area
 	// checkGround = true to perform an additional trace check on the ground
-	::Left4Utils.GetNextAreaInFlow <- function (area, checkGround = false)
+	::Left4Utils.GetNextAreaInFlow <- function (area, ignoreAreaID = 0, checkGround = false, includeBlocked = false)
 	{
 		local nextArea = null;
 		local nextFlow = GetFlowPercentForPosition(area.GetCenter(), false);
@@ -2026,11 +2062,16 @@ if (!("Left4Utils" in getroottable()))
 			area.GetAdjacentAreas(dir, areas);
 			foreach (a in areas)
 			{
-				local flow = GetFlowPercentForPosition(a.GetCenter(), false);
-				if (/*a.HasSpawnAttributes(NAVAREA_SPAWNATTR_ESCAPE_ROUTE) &&*/ flow > nextFlow && !a.IsBlocked(TEAM_SURVIVORS, false) && (!checkGround || Left4Utils.FindGroundFrom(a.GetCenter() + Vector(0, 0, 20), 240, 0).valid) && CheckAreasZDiff(area, a)) // Avoid areas that are too high or too low to jump on
+				if (ignoreAreaID == 0 || a.GetID() != ignoreAreaID)
 				{
-					nextFlow = flow;
-					nextArea = a;
+					local flow = GetFlowPercentForPosition(a.GetCenter(), false);
+					
+					// func_nav_blockers with affectflow param will make all the affected areas have the same flow, so in that case we'll follow the escape route
+					if ((flow > nextFlow || (flow == nextFlow && a.HasSpawnAttributes(NAVAREA_SPAWNATTR_ESCAPE_ROUTE))) && (includeBlocked || !a.IsBlocked(TEAM_SURVIVORS, false)) && (!checkGround || Left4Utils.FindGroundFrom(a.GetCenter() + Vector(0, 0, 20), 240, 0).valid) && CheckAreasZDiff(area, a)) // Avoid areas that are too high or too low to jump on
+					{
+						nextFlow = flow;
+						nextArea = a;
+					}
 				}
 			}
 		}
@@ -2039,8 +2080,9 @@ if (!("Left4Utils" in getroottable()))
 	
 	// Returns the next area (following the map's flow) connected to the given area via ladder
 	// checkGround = true to perform an additional trace check on the ground
-	::Left4Utils.GetNextLadderAreaInFlow <- function (area, checkGround = false)
+	::Left4Utils.GetNextLadderAreaInFlow <- function (area, ignoreAreaID = 0, checkGround = false, includeBlocked = false)
 	{
+		local areaID = area.GetID();
 		local nextArea = null;
 		local areaFlow = GetFlowPercentForPosition(area.GetCenter(), false);
 		local nextFlow = areaFlow
@@ -2052,19 +2094,21 @@ if (!("Left4Utils" in getroottable()))
 			{
 				if (ladder.IsUsableByTeam(TEAM_SURVIVORS))
 				{
-					// Apparently GetTopArea and GetBottomArea can be null so they aren't reliable
+					// Apparently GetTopArea and GetBottomArea can be null
 					//local otherArea = ladder.GetTopArea();
-					//if (!otherArea || otherArea.GetID() == area.GetID())
+					//if (!otherArea || otherArea.GetID() == areaID)
 					//	otherArea = ladder.GetBottomArea();
 					
 					local otherArea = Left4Utils.GetNearestLadderArea(ladder, false);
-					if (!otherArea || otherArea.GetID() == area.GetID())
+					if (!otherArea || otherArea.GetID() == areaID)
 						otherArea = Left4Utils.GetNearestLadderArea(ladder, true);
 					
-					if (otherArea)
+					if (otherArea && (ignoreAreaID == 0 || otherArea.GetID() != ignoreAreaID) && otherArea.GetID() != areaID)
 					{
 						local flow = GetFlowPercentForPosition(otherArea.GetCenter(), false);
-						if (/*otherArea.HasSpawnAttributes(NAVAREA_SPAWNATTR_ESCAPE_ROUTE) &&*/ flow > nextFlow && !otherArea.IsBlocked(TEAM_SURVIVORS, false) && (!checkGround || Left4Utils.FindGroundFrom(otherArea.GetCenter() + Vector(0, 0, 20), 240, 0).valid))
+						
+						// func_nav_blockers with affectflow param will make all the affected areas have the same flow, so in that case we'll follow the escape route
+						if ((flow > nextFlow || (flow == nextFlow && otherArea.HasSpawnAttributes(NAVAREA_SPAWNATTR_ESCAPE_ROUTE))) && (includeBlocked || !otherArea.IsBlocked(TEAM_SURVIVORS, false)) && (!checkGround || Left4Utils.FindGroundFrom(otherArea.GetCenter() + Vector(0, 0, 20), 240, 0).valid))
 						{
 							nextFlow = flow;
 							nextArea = otherArea;
@@ -2162,71 +2206,260 @@ if (!("Left4Utils" in getroottable()))
 	
 	// Returns the farthest (in the map's flow) pathable position
 	// limitDistance > 0 to limit the calculated path (and so the returned farthest position) to this max (roughly) distance from the survivor's current position
+	// dontStopOnDamaging = true to avoid returning the position of a DAMAGING nav area but to return the first non DAMAGING after that
+	// detourMaxDistance > 0 to try calc an alternative route to get past currently blocked nav areas (this will be the max distance of the detour)
 	// checkGround = true to perform an additional trace check on the ground
 	// debugDrawDuration > 0 to draw the entire calculated path on screen (only visible to the host) for the given amount of time
-	::Left4Utils.GetFarthestPathableFlowPos <- function (survivor, limitDistance = 0, checkGround = false, debugDrawDuration = 0)
+	::Left4Utils.GetFarthestPathableFlowPos <- function (survivor, limitDistance = 0, dontStopOnDamaging = false, detourMaxDistance = 0, checkGround = false, debugDrawDuration = 0)
 	{
-		local survOrigin = survivor.GetOrigin();
-		local survDist = GetFlowDistanceForPosition(survOrigin);
-		
-		//local currentArea = Left4Utils.GetNearestEscapeRouteArea(survivor);
-		//local currentArea = NavMesh.GetNavArea(survOrigin, 30);
-		//local currentArea = NavMesh.GetNearestNavArea(survOrigin, 200, true, true);
-		local currentArea = survivor.GetLastKnownArea();
-		if (!currentArea)
+		local ret = null;
+		local distance = 0;
+		local prevAreaID = 0;
+		local endAreaID = 0;
+		//local startArea = Left4Utils.GetNearestEscapeRouteArea(survivor);
+		//local startArea = NavMesh.GetNavArea(survivor.GetOrigin(), 30);
+		//local startArea = NavMesh.GetNearestNavArea(survivor.GetOrigin(), 200, true, true);
+		local startArea = survivor.GetLastKnownArea();
+		if (!startArea)
 		{
+			// This shouldn't happen, tho
 			if (debugDrawDuration > 0)
-				DebugDrawCircle(survOrigin, Vector(255, 0, 0), 255, 10, true, debugDrawDuration);
+				DebugDrawCircle(survivor.GetOrigin(), Vector(255, 0, 0), 255, 10, true, debugDrawDuration);
 			
-			return survOrigin;
+			return survivor.GetOrigin();
 		}
+		local currentArea = startArea;
 		
-		
-		//if (limitDistance > 0 && (currentArea.GetCenter() - survOrigin).Length() >= limitDistance)
-		if (limitDistance > 0 && abs(GetFlowDistanceForPosition(currentArea.GetCenter()) - survDist) >= limitDistance)
+		local debugAreas = [];
+		if (debugDrawDuration > 0)
+			debugAreas.append({ id = currentArea.GetID(), pos = currentArea.GetCenter(), blocked = false }); // The first will be drawn as start area
+
+		if (detourMaxDistance > 0)
 		{
-			if (debugDrawDuration > 0)
-				DebugDrawCircle(currentArea.GetCenter(), Vector(255, 0, 0), 255, 10, true, debugDrawDuration);
+			// Here we'll try to calculate an alternate path to get past the blocked areas
+
+			local nextArea = Left4Utils.GetNextAreaInFlow(currentArea, prevAreaID, checkGround, true);
+			if (!nextArea)
+				nextArea = Left4Utils.GetNextLadderAreaInFlow(currentArea, prevAreaID, checkGround, true);
 			
-			return currentArea.GetCenter();
+			local preBlocked = null;
+			local isBlocked = false;
+			while (nextArea)
+			{
+				isBlocked = nextArea.IsBlocked(TEAM_SURVIVORS, false);
+				if (!preBlocked && isBlocked)
+					preBlocked = currentArea; // Save the non blocked area prior the first blocked one
+				
+				if (debugDrawDuration > 0)
+					debugAreas.append({ id = nextArea.GetID(), pos = nextArea.GetCenter(), blocked = isBlocked });
+				
+				prevAreaID = currentArea.GetID();
+				distance += (nextArea.GetCenter() - currentArea.GetCenter()).Length();
+				currentArea = nextArea;
+				
+				if (!isBlocked && limitDistance > 0 && distance >= limitDistance && (!dontStopOnDamaging || !currentArea.IsDamaging()))
+					nextArea = null; // Stop when distance > limitDistance and we are not over a blocked (or damaging) area
+				else
+				{
+					nextArea = Left4Utils.GetNextAreaInFlow(currentArea, prevAreaID, checkGround, true);
+					if (!nextArea)
+						nextArea = Left4Utils.GetNextLadderAreaInFlow(currentArea, prevAreaID, checkGround, true);
+				}
+			}
+			
+			if (preBlocked)
+			{
+				endAreaID = preBlocked.GetID();
+				
+				if (!isBlocked)
+				{
+					// We got through blocked areas, let's see if we can calculate a valid alternate path
+					local detourEndPos = Left4Utils.GetFarthestPathableDetourPos(startArea, currentArea, detourMaxDistance, checkGround, debugDrawDuration);
+					if (detourEndPos)
+						ret = detourEndPos; // We got a valid detour, return it's end (area with highest flow)
+					else
+						ret = preBlocked.GetCenter(); // No valid detour, return the position of the last normal area before the first blocked one
+				}
+				else
+					ret = preBlocked.GetCenter(); // For some reason we couldn't find a non blocked area after the blocked ones, return the position of the last normal area before the first blocked one
+			}
+			else
+			{
+				// There was no blocked area at all
+				endAreaID = currentArea.GetID();
+				ret = currentArea.GetCenter();
+			}
+		}
+		else
+		{
+			// Here we'll stop at the area prior the first blocked area
+			
+			local nextArea = Left4Utils.GetNextAreaInFlow(currentArea, prevAreaID, checkGround, false);
+			if (!nextArea)
+				nextArea = Left4Utils.GetNextLadderAreaInFlow(currentArea, prevAreaID, checkGround, false);
+			
+			while (nextArea)
+			{
+				if (debugDrawDuration > 0)
+					debugAreas.append({ id = nextArea.GetID(), pos = nextArea.GetCenter(), blocked = false });
+				
+				prevAreaID = currentArea.GetID();
+				distance += (nextArea.GetCenter() - currentArea.GetCenter()).Length();
+				currentArea = nextArea;
+				
+				if (limitDistance > 0 && distance >= limitDistance && (!dontStopOnDamaging || !nextArea.IsDamaging()))
+					nextArea = null; // Stop when distance > limitDistance (and we are not over a damaging area)
+				else
+				{
+					nextArea = Left4Utils.GetNextAreaInFlow(currentArea, prevAreaID, checkGround, false);
+					if (!nextArea)
+						nextArea = Left4Utils.GetNextLadderAreaInFlow(currentArea, prevAreaID, checkGround, false);
+				}
+			}
+			
+			endAreaID = currentArea.GetID();
+			ret = currentArea.GetCenter();
 		}
 		
 		if (debugDrawDuration > 0)
-			//currentArea.DebugDrawFilled(0, 255, 0, 255, debugDrawDuration, true);
-			DebugDrawCircle(currentArea.GetCenter(), Vector(0, 255, 0), 255, 10, true, debugDrawDuration);
-
-		local nextArea = Left4Utils.GetNextAreaInFlow(currentArea, checkGround);
-		if (!nextArea)
-			nextArea = Left4Utils.GetNextLadderAreaInFlow(currentArea, checkGround);
-		
-		while (nextArea)
 		{
-			if (debugDrawDuration > 0)
-				DebugDrawLine_vCol(currentArea.GetCenter(), nextArea.GetCenter(), Vector(0, 255, 255), true, debugDrawDuration);
-			
-			currentArea = nextArea;
-			//if (limitDistance > 0 && (currentArea.GetCenter() - survOrigin).Length() >= limitDistance)
-			if (limitDistance > 0 && abs(GetFlowDistanceForPosition(currentArea.GetCenter()) - survDist) >= limitDistance)
-				nextArea = null;
-			else
+			for (local i = 0; i < debugAreas.len(); i++)
 			{
-				nextArea = Left4Utils.GetNextAreaInFlow(currentArea, checkGround);
-				if (!nextArea)
-					nextArea = Left4Utils.GetNextLadderAreaInFlow(currentArea, checkGround);
-			}
-			
-			if (debugDrawDuration > 0)
-			{
-				if (nextArea)
-					//currentArea.DebugDrawFilled(0, 255, 255, 255, debugDrawDuration, true);
-					DebugDrawCircle(currentArea.GetCenter(), Vector(0, 255, 255), 255, 10, true, debugDrawDuration);
+				if (debugAreas[i].id == endAreaID)
+					DebugDrawCircle(debugAreas[i].pos, Vector(255, 0, 0), 255, 10, true, debugDrawDuration); // End area
+				else if (i == 0)
+					DebugDrawCircle(debugAreas[i].pos, Vector(0, 255, 0), 255, 10, true, debugDrawDuration); // Start area
+				else if (debugAreas[i].blocked)
+					DebugDrawCircle(debugAreas[i].pos, Vector(255, 255, 0), 255, 10, true, debugDrawDuration); // Blocked area
 				else
-					//currentArea.DebugDrawFilled(255, 0, 0, 255, debugDrawDuration, true);
-					DebugDrawCircle(currentArea.GetCenter(), Vector(255, 0, 0), 255, 10, true, debugDrawDuration);
+					DebugDrawCircle(debugAreas[i].pos, Vector(0, 255, 255), 255, 10, true, debugDrawDuration); // Normal area
+				
+				if (i > 0)
+					DebugDrawLine_vCol(debugAreas[i-1].pos, debugAreas[i].pos, Vector(255, 255, 255), true, debugDrawDuration); // Connecting line
 			}
 		}
 		
-		return currentArea.GetCenter();
+		return ret;
+	}
+	
+	// Builds a path from startArea to endArea which must be within maxDetourDistance. If a path exists, it checks whether the path is actually traversable by a survivor
+	// If a survivor can actually path from starArea to endArea, the position of the area (of the built path) with the highest flow is returned, otherwise null
+	::Left4Utils.GetFarthestPathableDetourPos <- function (startArea, endArea, maxDetourDistance = 10000, checkGround = false, debugDrawDuration = 0)
+	{
+		// GetNavAreasFromBuildPath isn't usable. It returns the path in a table which doesn't keep the correct order
+		if (!NavMesh.NavAreaBuildPath(startArea, endArea, endArea.GetCenter(), maxDetourDistance, TEAM_SURVIVORS, false))
+			return null;
+		
+		// Read the path from the end area to the start
+		local detour = [];
+		local area = endArea;
+		while (area)
+		{
+			detour.append(area);
+			area = area.GetParent();
+		}
+		
+		local ret = null;
+		local endAreaID = 0;
+		local prevArea = null;
+		local endFlow = GetFlowPercentForPosition(startArea.GetCenter(), false);
+		local debugAreas = [];
+		
+		for (local i = detour.len() - 1; i >= 0; i--)
+		{
+			local area = detour[i];
+			if (prevArea)
+			{
+				// Can survivors actually get from prevArea to area?
+				if (area.IsBlocked(TEAM_SURVIVORS, false) || (checkGround && !Left4Utils.FindGroundFrom(area.GetCenter() + Vector(0, 0, 20), 240, 0).valid) || !CheckAreasZDiff(prevArea, area))
+					return null; // No
+				
+				if (debugDrawDuration > 0)
+					debugAreas.append({ id = area.GetID(), pos = area.GetCenter() });
+				
+				// Get the aera with the highest flow along the detour
+				local flow = GetFlowPercentForPosition(area.GetCenter(), false);
+				if (flow > endFlow)
+				{
+					endFlow = flow;
+					endAreaID = area.GetID();
+					ret = area.GetCenter();
+				}
+				
+				prevArea = area;
+			}
+			else
+				prevArea = area;
+		}
+		
+		if (debugDrawDuration > 0)
+		{
+			for (local i = 0; i < debugAreas.len(); i++)
+			{
+				if (i > 0)
+					DebugDrawLine_vCol(debugAreas[i-1].pos, debugAreas[i].pos, Vector(255, 255, 255), true, debugDrawDuration); // Connecting line
+				
+				if (debugAreas[i].id == endAreaID)
+				{
+					DebugDrawCircle(debugAreas[i].pos, Vector(255, 0, 0), 255, 10, true, debugDrawDuration); // Draw circle for detour end area
+					break;
+				}
+				else
+					DebugDrawCircle(debugAreas[i].pos, Vector(255, 0, 255), 255, 10, true, debugDrawDuration); // Draw circle for detour normal area
+			}			
+		}
+		
+		// If we are here it means that the detour was fully pathable and, if everything went right, ret contains the position of the area with the highest flow along the detour
+		return ret;
+	}
+	
+	// Basically it's NavMesh.GetNavAreasFromBuildPath but instead of having a table with randomically ordered areas it uses an array (outReversedPath)
+	// The areas in the array will be in reverse order (from endArea to startArea)
+	// dbgDrawDuration > 0 to draw the path on screen (only visible to the host) for this amount of time
+	::Left4Utils.GetNavAreasFromBuildPath <- function (startArea, endArea, goalPos, flMaxPathLength, teamID, ignoreNavBlockers, outReversedPath, dbgDrawDuration = 0)
+	{
+		if (!NavMesh.NavAreaBuildPath(startArea, endArea, goalPos, flMaxPathLength, teamID, ignoreNavBlockers))
+			return false;
+
+		local prev = null;
+		local area = endArea;
+		while (area)
+		{
+			// outReversedPath.insert(0, area); // DON'T DO IT!!! A for loop from outReversedPath.len()-1 down to 0 is a lot better than a "Script terminated by SQQuerySuspend"
+			outReversedPath.append(area);
+			
+			if (dbgDrawDuration > 0)
+			{
+				if (prev)
+				{
+					if (area.GetParent())
+						DebugDrawCircle(area.GetCenter(), Vector(0, 255, 255), 255, 10, true, dbgDrawDuration); // Middle area
+					else
+					{
+						DebugDrawCircle(area.GetCenter(), Vector(0, 255, 0), 255, 10, true, dbgDrawDuration); // It's the startArea
+						DebugDrawText(area.GetCenter(), "START", false, dbgDrawDuration);
+					}
+					
+					// Connecting line
+					DebugDrawLine_vCol(prev.GetCenter(), area.GetCenter(), Vector(255, 255, 255), true, dbgDrawDuration);
+					//DebugDrawBoxDirection(prev.GetCenter(), Vector(-10, -10, -10), Vector(10, 10, 10), (area.GetCenter() - prev.GetCenter()), Vector(255, 0, 0), 255, dbgDrawDuration);
+				}
+				else
+				{
+					// The first is endArea
+					DebugDrawCircle(area.GetCenter(), Vector(255, 0, 0), 255, 10, true, dbgDrawDuration);
+					DebugDrawText(area.GetCenter(), "END", false, dbgDrawDuration);
+				}
+				
+				//local how = area.GetParentHow();
+				//DebugDrawText(area.GetCenter(), "how: " + how, false, dbgDrawDuration);
+			}
+			
+			prev = area;
+			area = area.GetParent();
+		}
+		
+		return true;
 	}
 	
 	::Left4Utils.PrintStackTrace <- function ()
