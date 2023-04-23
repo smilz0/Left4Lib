@@ -1842,6 +1842,9 @@ if (!("Left4Utils" in getroottable()))
 	// lockLook = true means that the player will be frozen for a duration of holdTime+unlockLookDelay seconds to make sure it will keep the given lookat direction for the entire button press duration
 	::Left4Utils.PlayerPressButton <- function (player, button, holdTime = 0.05, destination = null, deltaPitch = 0, deltaYaw = 0, lockLook = false, unlockLookDelay = 0)
 	{
+		if (!player || !player.IsValid())
+			return;
+		
 		if (lockLook)
 		{
 			NetProps.SetPropInt(player, "m_fFlags", NetProps.GetPropInt(player, "m_fFlags") | (1 << 5)); // set FL_FROZEN
