@@ -120,6 +120,9 @@ const TRACE_MASK_VISION = 33579073;
 const TRACE_MASK_VISIBLE = 24705;
 const TRACE_MASK_SOLID_BRUSHONLY = 16395;
 
+//const TRACE_MASK_DEFAULT = 33570827 // TRACE_MASK_SOLID; // 1174421507 TRACE_MASK_SHOT;
+const TRACE_MASK_DEFAULT = 33579073; // TODO: MASK_BLOCKLOS_AND_NPCS|CONTENTS_IGNORE_NODRAW_OPAQUE
+
 const NAVAREA_SPAWNATTR_BATTLESTATION = 32;
 const NAVAREA_SPAWNATTR_FINALE = 64;
 const NAVAREA_SPAWNATTR_PLAYER_START = 128;
@@ -146,13 +149,124 @@ const LOG_LEVEL_WARN = 2;
 const LOG_LEVEL_INFO = 3;
 const LOG_LEVEL_DEBUG = 4;
 
-
 if (!("Left4Utils" in getroottable()))
 {
 	::Left4Utils <-
 	{
 		DirectorStopped = false
 		DirectorStopCVARS = {}
+		
+		// weapon_spawn weapon ids
+		WeaponId =
+		{
+			none = 0
+			weapon_pistol = 1
+			weapon_smg = 2
+			weapon_pumpshotgun = 3
+			weapon_autoshotgun = 4
+			weapon_rifle = 5
+			weapon_hunting_rifle = 6
+			weapon_smg_silenced = 7
+			weapon_shotgun_chrome = 8
+			weapon_rifle_desert = 9
+			weapon_sniper_military = 10
+			weapon_shotgun_spas = 11
+			weapon_first_aid_kit = 12
+			weapon_molotov = 13
+			weapon_pipe_bomb = 14
+			weapon_pain_pills = 15
+			weapon_gascan = 16
+			weapon_propanetank = 17
+			weapon_oxygentank = 18
+			weapon_melee = 19
+			weapon_chainsaw = 20
+			weapon_grenade_launcher = 21
+			weapon_ammo_pack = 22       		// ?
+			weapon_adrenaline = 23
+			weapon_defibrillator = 24
+			weapon_vomitjar = 25
+			weapon_rifle_ak47 = 26
+			weapon_gnome = 27
+			weapon_cola_bottles = 28
+			weapon_fireworkcrate = 29
+			weapon_upgradepack_incendiary = 30
+			weapon_upgradepack_explosive = 31
+			weapon_pistol_magnum = 32
+			weapon_smg_mp5 = 33
+			weapon_rifle_sg552 = 34
+			weapon_sniper_awp = 35
+			weapon_sniper_scout = 36
+			weapon_rifle_m60 = 37
+			/*
+			weapon_tank_claw = 38
+			weapon_hunter_claw = 39
+			weapon_charger_claw = 40
+			weapon_boomer_claw = 41
+			weapon_smoker_claw = 42
+			weapon_spitter_claw = 43
+			weapon_jockey_claw = 44
+			weapon_machinegun = 45
+			weapon_vomit = 46
+			weapon_splat = 47
+			weapon_pounce = 48
+			weapon_lounge = 49
+			weapon_pull = 50
+			weapon_choke = 51
+			weapon_rock = 52
+			weapon_physics = 53
+			*/
+			weapon_ammo = 54             		// (weapon_ammo_spawn)
+			weapon_upgrade_item = 55      		// (upgrade_*)
+		}
+
+		// 
+		MeleeWeaponId =
+		{
+			none = 100
+			baseball_bat = 101
+			cricket_bat = 102
+			crowbar = 103
+			electric_guitar = 104
+			fireaxe = 105
+			frying_pan = 106
+			golfclub = 107
+			katana = 108
+			knife = 109
+			machete = 110
+			pitchfork = 111
+			shovel = 112
+			riot_shield = 113
+			tonfa = 114
+		}
+
+		//
+		MeleeWeaponModels =
+		{
+			none = 100
+			w_bat = 101
+			w_cricket_bat = 102
+			w_crowbar = 103
+			w_electric_guitar = 104
+			w_fireaxe = 105
+			w_frying_pan = 106
+			w_golfclub = 107
+			w_katana = 108
+			w_knife_t = 109
+			w_machete = 110
+			w_pitchfork = 111
+			w_shovel = 112
+			w_riotshield = 113
+			w_tonfa = 114
+		}
+
+		// 
+		UpgradeWeaponId =
+		{
+			none = 200
+			upgrade_ammo_explosive = 201
+			upgrade_ammo_incendiary = 202
+			upgrade_laser_sight = 203
+		}
 	}
 
 	::Left4Utils.StringReplace <- function (str, orig, replace)
@@ -1120,7 +1234,6 @@ if (!("Left4Utils" in getroottable()))
 		local start = pos;
 		local end = start - Vector(0, 0, maxHeight);
 		
-		//local traceTable = { start = start, end = end, mask = TRACE_MASK_SHOT };
 		local traceTable = { start = start, end = end, mask = TRACE_MASK_SOLID };
 		TraceLine(traceTable);
 		
@@ -1143,7 +1256,7 @@ if (!("Left4Utils" in getroottable()))
 		local _p1 = origin + (forward * 10);
 		local _p2 = origin + (forward * 55);
 		
-		local traceTable = { start = _p1, end = _p2, mask = TRACE_MASK_SHOT };
+		local traceTable = { start = _p1, end = _p2, mask = TRACE_MASK_DEFAULT };
 		TraceLine(traceTable);
 		if (traceTable.hit)
 			return null;
@@ -1187,7 +1300,9 @@ if (!("Left4Utils" in getroottable()))
 		return abs(source.GetOrigin().z - dest.GetOrigin().z);
 	}
 	
-	::Left4Utils.CanTraceTo <- function (source, dest, mask = TRACE_MASK_SHOT, maxDist = 0)
+	// Returns true if the 'source' player can trace to the 'dest' entity with the given trace 'mask' and whithin 'maxDist', false otherwise
+	// Alternatively can also return true if the trace hits an entity of class 'altClass' (if non null)
+	::Left4Utils.CanTraceTo <- function (source, dest, mask = TRACE_MASK_DEFAULT, maxDist = 0, altClass = null)
 	{
 		/*
 		// Note: Doing "end = dest.GetOrigin()" doesn't work when the object is lying on it's side with a certain angle because the trace ends right next to the object itself so i add a little offset towards the object's Up.
@@ -1204,7 +1319,7 @@ if (!("Left4Utils" in getroottable()))
 		
 		TraceLine(traceTable);
 		
-		if (!traceTable.hit || traceTable.enthit != dest)
+		if (!traceTable.hit || !traceTable.enthit || (traceTable.enthit != dest && (!altClass || traceTable.enthit.GetClassname() != altClass)))
 			return false;
 		
 		if (maxDist && (traceTable.pos - start).Length() > maxDist)
@@ -1213,7 +1328,7 @@ if (!("Left4Utils" in getroottable()))
 		return true;
 	}
 	
-	::Left4Utils.CanTraceToEntPos <- function (source, dest, pos, mask = TRACE_MASK_SHOT, maxDist = 0)
+	::Left4Utils.CanTraceToEntPos <- function (source, dest, pos, mask = TRACE_MASK_DEFAULT, maxDist = 0)
 	{
 		local start = source.EyePosition();
 		local end = pos;
@@ -1230,7 +1345,7 @@ if (!("Left4Utils" in getroottable()))
 		return true;
 	}
 	
-	::Left4Utils.CanTraceToPos <- function (source, pos, mask = TRACE_MASK_SHOT)
+	::Left4Utils.CanTraceToPos <- function (source, pos, mask = TRACE_MASK_DEFAULT)
 	{
 		local traceTable = { start = source.EyePosition(), end = pos, ignore = source, mask = mask };
 		TraceLine(traceTable);
@@ -1242,7 +1357,7 @@ if (!("Left4Utils" in getroottable()))
 	}
 	
 	// Returns: null = no looking position, (Vector) = looking position
-	::Left4Utils.GetLookingPosition <- function (player, mask = TRACE_MASK_SHOT)
+	::Left4Utils.GetLookingPosition <- function (player, mask = TRACE_MASK_DEFAULT)
 	{
 		local start = player.EyePosition();
 		local end = start + player.EyeAngles().Forward().Scale(999999);
@@ -1257,7 +1372,7 @@ if (!("Left4Utils" in getroottable()))
 	}
 	
 	// Returns: null = no looking target, (Entity) = target entity, (Vector) = target position if no entity was looked at
-	::Left4Utils.GetLookingTarget <- function (player, mask = TRACE_MASK_SHOT)
+	::Left4Utils.GetLookingTarget <- function (player, mask = TRACE_MASK_DEFAULT)
 	{
 		local start = player.EyePosition();
 		local end = start + player.EyeAngles().Forward().Scale(999999);
@@ -1275,7 +1390,7 @@ if (!("Left4Utils" in getroottable()))
 	}
 	
 	// Returns: null = no looking target, { pos (Vector) = hit position, ent (Entity) = hit entity }
-	::Left4Utils.GetLookingTargetEx <- function (player, mask = TRACE_MASK_SHOT)
+	::Left4Utils.GetLookingTargetEx <- function (player, mask = TRACE_MASK_DEFAULT)
 	{
 		local ret = { pos = null, ent = null };
 		
@@ -2613,7 +2728,7 @@ if (!("Left4Utils" in getroottable()))
 		local start = player.EyePosition();
 		local end = start + player.EyeAngles().Forward().Scale(radius);
 			
-		local m_trace = { start = start, end = end, ignore = player, mask = TRACE_MASK_SOLID };
+		local m_trace = { start = start, end = end, ignore = player, mask = TRACE_MASK_DEFAULT };
 		TraceLine(m_trace);
 			
 		if (m_trace.hit && m_trace.enthit && m_trace.enthit.IsValid() && m_trace.enthit != player && m_trace.enthit.GetClassname() != "worldspawn" && (entClass == null || m_trace.enthit.GetClassname() == entClass))
@@ -2686,6 +2801,214 @@ if (!("Left4Utils" in getroottable()))
 		player.GiveItem(itemClass);
 		Left4Timers.AddTimer(null, 0.2, Left4Utils.SetItemSkin, { player = player, itemClass = itemClass, skinNumber = skinNumber }, false);
 	}
-	
+
+	::Left4Utils.GetMeleeIdByModel <- function (modelName)
+	{
+		local mdl = Left4Utils.StringReplace(modelName, "models/weapons/melee/", "");
+		mdl = Left4Utils.StringReplace(mdl, "models/w_models/weapons/", "");
+		mdl = Left4Utils.StringReplace(mdl, ".mdl", "");
+		if (mdl in Left4Utils.MeleeWeaponModels)
+			return Left4Utils.MeleeWeaponModels[mdl];
+		else
+			return Left4Utils.MeleeWeaponModels.none;
+	}
+
+	::Left4Utils.GetWeaponId <- function (weaponent)
+	{
+		local id = Left4Utils.WeaponId.none;
+		//if (!weaponent || !weaponent.IsValid())
+		//	return id;
+		
+		local className = weaponent.GetClassname();
+		//printl("Left4Utils.GetWeaponId - className: " + className);
+		
+		if (className.find("weapon_") != null)
+		{
+			// weapon_*
+			
+			local isSpawn = className.find("_spawn");
+			if (isSpawn)
+			{
+				// weapon_*_spawn
+				
+				if (NetProps.GetPropInt(weaponent, "m_itemCount") <= 0)
+				{
+					//printl("Left4Utils.GetWeaponId - m_itemCount <= 0");
+					return Left4Utils.WeaponId.none;
+				}
+				
+				id = NetProps.GetPropInt(weaponent, "m_weaponID");
+			}
+
+			if (id <= Left4Utils.WeaponId.none)
+			{
+				if (isSpawn)
+					className = Left4Utils.StringReplace(className, "_spawn", "");
+
+				if (className in Left4Utils.WeaponId)
+					id = Left4Utils.WeaponId[className];
+			}
+			
+			if (id == Left4Utils.WeaponId.weapon_melee)
+			{
+				// weapon_melee*
+				
+				if (isSpawn)
+					className = NetProps.GetPropString(weaponent, "m_iszMeleeWeapon"); // This can also be "Any"
+				else
+					className = NetProps.GetPropString(weaponent, "m_strMapSetScriptName");
+				
+				//printl("Left4Utils.GetWeaponId - melee: " + className);
+				
+				if (className in Left4Utils.MeleeWeaponId)
+					id = Left4Utils.MeleeWeaponId[className];
+				else
+					id = Left4Utils.GetMeleeIdByModel(weaponent.GetModelName());
+			}
+		}
+		else if (className in Left4Utils.UpgradeWeaponId)
+		{
+			// upgrade_*
+			
+			if (NetProps.GetPropInt(weaponent, "m_itemCount") <= 0)
+			{
+				//printl("Left4Utils.GetWeaponId - m_itemCount <= 0 (upgrade)");
+				return Left4Utils.UpgradeWeaponId.none;
+			}
+			
+			id = Left4Utils.UpgradeWeaponId[className];
+		}
+		
+		//printl("Left4Utils.GetWeaponId - id: " + id);
+		
+		return id;
+	}
+
+	::Left4Utils.GetWeaponIdByName <- function (weaponName)
+	{
+		if (weaponName in Left4Utils.WeaponId)
+			return Left4Utils.WeaponId[weaponName];
+		
+		if ("weapon_" + weaponName in Left4Utils.WeaponId)
+			return Left4Utils.WeaponId["weapon_" + weaponName];
+		
+		if (weaponName in Left4Utils.MeleeWeaponId)
+			return Left4Utils.MeleeWeaponId[weaponName];
+		
+		if (weaponName in Left4Utils.UpgradeWeaponId)
+			return Left4Utils.UpgradeWeaponId[weaponName];
+
+		if ("upgrade_" + weaponName in Left4Utils.UpgradeWeaponId)
+			return Left4Utils.UpgradeWeaponId["upgrade_" + weaponName];
+		
+		Left4Utils.WeaponId.none;
+	}
+
+	// Returns the inventory slot number (0 to 4) for the weapon with the given id
+	// Will also return 5 for hold items (gascan, propanetank, oxygentank, gnome, cola_bottles, fireworkcrate) or -1 if unhandled weapon
+	::Left4Utils.GetWeaponSlotById <- function (weaponId)
+	{
+		switch (weaponId)
+		{
+			case 2:
+			case 3:
+			case 4:
+			case 5:
+			case 6:
+			case 7:
+			case 8:
+			case 9:
+			case 10:
+			case 11:
+			case 21:
+			case 26:
+			case 33:
+			case 34:
+			case 35:
+			case 36:
+			case 37:
+				return 0;
+				break;
+			
+			case 1:
+			case 19:
+			case 20:
+			case 32:
+			case 101:
+			case 102:
+			case 103:
+			case 104:
+			case 105:
+			case 106:
+			case 107:
+			case 108:
+			case 109:
+			case 110:
+			case 111:
+			case 112:
+			case 113:
+			case 114:
+				return 1;
+				break;
+
+			case 13:
+			case 14:
+			case 25:
+				return 2;
+			
+			case 12:
+			case 24:
+			case 30:
+			case 31:
+				return 3;
+				break;
+			
+			case 15:
+			case 23:
+				return 4;
+				break;
+			
+			case 16:
+			case 17:
+			case 18:
+			case 27:
+			case 28:
+			case 29:
+				return 5;
+				break;
+			
+			default:
+				return -1;
+		}
+	}
+
+	::Left4Utils.GetAmmoPercent <- function (weaponent)
+	{
+		if (!("Clip1" in weaponent))
+			return 100.0; // Assume it's a weapon spawn
+		
+		local ammoType = NetProps.GetPropInt(weaponent, "m_iPrimaryAmmoType");
+		local maxAmmo = Left4Utils.GetMaxAmmo(ammoType) + weaponent.GetMaxClip1();
+		local owner = NetProps.GetPropEntity(weaponent, "m_hOwner");
+		if (owner && owner.IsPlayer())
+			return (100.0 / maxAmmo) * (NetProps.GetPropIntArray(owner, "m_iAmmo", ammoType) + weaponent.Clip1());
+		else
+		{
+			local ammo = NetProps.GetPropInt(weaponent, "m_iExtraPrimaryAmmo");
+			if (ammo < 0)
+				ammo = 0;
+			return (100.0 / maxAmmo) * (ammo + weaponent.Clip1());
+		}
+	}
+
+	// Returns true if the survivor with the given character id can use the given deployed upgrade pack, false if can't (likely already used it)
+	// Note: upgrade_laser_sight seem to keep m_iUsedBySurvivorsMask to 0, so the survivors can always reuse it
+	// Note2: extra (manually spawned with charid > 3) survivor bots don't seem to set their flag when using the upgrade but they still affect the use count, so they can keep reuse the same upgrade as long as it's count is > 0
+	// Note3: survivor bots don't seem to use incediary/explosive ammo upgrades if they already have at least 1 upgraded bullet in their weapon
+	::Left4Utils.CanUseUpgrade <- function (charid, upgradeent)
+	{
+		return (NetProps.GetPropInt(upgradeent, "m_iUsedBySurvivorsMask") & (1 << charid)) == 0;
+	}
+
 	//
 }
