@@ -121,7 +121,7 @@ const TRACE_MASK_VISIBLE = 24705;
 const TRACE_MASK_SOLID_BRUSHONLY = 16395;
 
 //const TRACE_MASK_DEFAULT = 33570827 // TRACE_MASK_SOLID; // 1174421507 TRACE_MASK_SHOT;
-const TRACE_MASK_DEFAULT = 33579073; // TODO: MASK_BLOCKLOS_AND_NPCS|CONTENTS_IGNORE_NODRAW_OPAQUE
+const TRACE_MASK_DEFAULT = 33579075; // TODO: MASK_BLOCKLOS_AND_NPCS|CONTENTS_IGNORE_NODRAW_OPAQUE
 
 const NAVAREA_SPAWNATTR_BATTLESTATION = 32;
 const NAVAREA_SPAWNATTR_FINALE = 64;
@@ -2980,6 +2980,25 @@ if (!("Left4Utils" in getroottable()))
 			default:
 				return -1;
 		}
+	}
+
+	::Left4Utils.HasWeaponId <- function (player, weaponid)
+	{
+		local slot = Left4Utils.GetWeaponSlotById(weaponid);
+		if (slot >= 0)
+		{
+			local weapon = Left4Utils.GetInventoryItemInSlot(player, slot);
+			return (weapon != null && weapon.IsValid() && Left4Utils.GetWeaponId(weapon) == weaponid);
+		}
+		
+		local inv = {};
+		GetInvTable(player, inv);
+		foreach (weapon in inv)
+		{
+			if (weapon != null && weapon.IsValid() && Left4Utils.GetWeaponId(weapon) == weaponid)
+				return true;
+		}
+		return false;
 	}
 
 	::Left4Utils.GetAmmoPercent <- function (weaponent)
