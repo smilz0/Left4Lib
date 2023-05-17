@@ -143,6 +143,10 @@ const WITCH_ANIM_DUCKING_ANGRY = 27;
 const FINDGROUND_MAXHEIGHT = 120; // 70
 const FINDGROUND_MINFRACTION = 0.2; // 0.5
 
+// Type of scavenge item accepted by the scavenge use target
+const SCAV_TYPE_GASCAN = 1;
+const SCAV_TYPE_COLA = 2;
+
 // Log levels
 const LOG_LEVEL_NONE = 0; // Log always
 const LOG_LEVEL_ERROR = 1;
@@ -2988,7 +2992,7 @@ if (!("Left4Utils" in getroottable()))
 		local slot = Left4Utils.GetWeaponSlotById(weaponid);
 		if (slot >= 0)
 		{
-			local weapon = Left4Utils.GetInventoryItemInSlot(player, slot);
+			local weapon = Left4Utils.GetInventoryItemInSlot(player, "slot" + slot);
 			return (weapon != null && weapon.IsValid() && Left4Utils.GetWeaponId(weapon) == weaponid);
 		}
 		
