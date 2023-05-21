@@ -26,7 +26,7 @@ if (!("Left4Users" in getroottable()))
 		}
 		Admins = {}
 		OnlineUsers = {}
-		JoiningUserids = {}
+		JoiningUsers = {}
 		Events = {}
 	}
 
@@ -306,6 +306,11 @@ if (!("Left4Users" in getroottable()))
 		}
 	}
 	
+	::Left4Users.IsJustJoined <- function (userid)
+	{
+		return (userid in ::Left4Users.JoiningUsers);
+	}
+	
 	::Left4Users.InterceptChat <- function (msg, speaker)
 	{
 		if (!speaker || !speaker.IsValid())
@@ -533,7 +538,7 @@ if (!("Left4Users" in getroottable()))
 			{
 				printl("[Left4Users][INFO] Player connected: " + name + " - userid: " + userid + " - index: " + index + " - address: " + address + " - steamid: " + steamid + " - xuid: " + xuid + " - bot: " + bot);
 
-				::Left4Users.JoiningUserids[userid] <- 1;
+				::Left4Users.JoiningUsers[userid] <- 1;
 
 				if (name)
 				{
@@ -559,9 +564,9 @@ if (!("Left4Users" in getroottable()))
 			local userid = params["userid"];
 			local player = g_MapScript.GetPlayerFromUserID(userid);
 
-			local joining = userid in ::Left4Users.JoiningUserids;
-			if (joining)
-				delete ::Left4Users.JoiningUserids[userid];
+			local joining = (userid in ::Left4Users.JoiningUsers) && Left4Users.JoiningUsers[userid];
+			if (userid in ::Left4Users.JoiningUsers)
+				Left4Users.JoiningUsers[userid] = 0;
 
 			if (player && player.IsValid() && !IsPlayerABot(player))
 				Left4Users.PlayerIn(player, joining);
@@ -598,8 +603,8 @@ if (!("Left4Users" in getroottable()))
 			local userid = params["userid"];
 			local player = g_MapScript.GetPlayerFromUserID(userid);
 
-			if (userid in ::Left4Users.JoiningUserids)
-				delete ::Left4Users.JoiningUserids[userid];
+			if (userid in ::Left4Users.JoiningUsers)
+				delete ::Left4Users.JoiningUsers[userid];
 
 			if (player && player.IsValid() && IsPlayerABot(player))
 				return;
