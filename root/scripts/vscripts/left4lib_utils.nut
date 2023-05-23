@@ -658,6 +658,25 @@ if (!("Left4Utils" in getroottable()))
 		return t;
 	}
 	
+	::Left4Utils.GetBotSurvivors <- function (team = TEAM_SURVIVORS)
+	{
+		local t = {};
+		local ent = null;
+		local i = -1;
+		while (ent = Entities.FindByClassname(ent, "player"))
+		{
+			if (ent.IsValid() && ent.IsSurvivor() && IsPlayerABot(ent) && (team == 0 || NetProps.GetPropInt(ent, "m_iTeamNum") == team))
+				t[++i] <- ent;
+		}
+		ent = null;
+		while (ent = Entities.FindByClassname(ent, "survivor_bot"))
+		{
+			if (ent.IsValid() && ent.IsSurvivor() && (team == 0 || NetProps.GetPropInt(ent, "m_iTeamNum") == team))
+				t[++i] <- ent;
+		}
+		return t;
+	}
+	
 	::Left4Utils.GetAliveHumanSurvivors <- function (team = TEAM_SURVIVORS)
 	{
 		local t = {};
