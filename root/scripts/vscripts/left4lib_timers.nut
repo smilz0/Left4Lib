@@ -3,6 +3,8 @@
 //     https://steamcommunity.com/id/smilz0
 //------------------------------------------------------
 
+IncludeScript("left4lib_consts");
+
 if (!("Left4Timers" in getroottable()))
 {
 	::Left4Timers <-

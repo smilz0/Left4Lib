@@ -3,6 +3,9 @@
 //     https://steamcommunity.com/id/smilz0
 //------------------------------------------------------
 
+IncludeScript("left4lib_consts");
+IncludeScript("left4lib_settings");
+
 if (!("HooksHub" in getroottable()))
 {
 	::HooksHub <-
@@ -14,6 +17,8 @@ if (!("HooksHub" in getroottable()))
 		UserConsoleCommandFuncs = {}
 		BotQueryFuncs = {}
 		CanPickupObjectFuncs = {}
+		ChatCommandHandlers = {}
+		ConsoleCommandHandlers = {}
 		Events = {}
 	}
 
@@ -173,6 +178,58 @@ if (!("HooksHub" in getroottable()))
 		return null;
 	}
 	
+	::HooksHub.SetChatCommandHandler <- function (key, func)
+	{
+		::HooksHub.ChatCommandHandlers[key] <- func;
+	}
+	
+	::HooksHub.RemoveChatCommandHandler <- function (key)
+	{
+		if (key in ::HooksHub.ChatCommandHandlers)
+			delete ::HooksHub.ChatCommandHandlers[key];
+	}
+	
+	::HooksHub.HasChatCommandHandler <- function (key)
+	{
+		return (key in ::HooksHub.ChatCommandHandlers);
+	}
+	
+	::HooksHub.GetChatCommandHandlerByFunc <- function (func)
+	{
+		foreach (key, val in ::HooksHub.ChatCommandHandlers)
+		{
+			if (val == func)
+				return key;
+		}
+		return null;
+	}
+	
+	::HooksHub.SetConsoleCommandHandler <- function (key, func)
+	{
+		::HooksHub.ConsoleCommandHandlers[key] <- func;
+	}
+	
+	::HooksHub.RemoveConsoleCommandHandler <- function (key)
+	{
+		if (key in ::HooksHub.ConsoleCommandHandlers)
+			delete ::HooksHub.ConsoleCommandHandlers[key];
+	}
+	
+	::HooksHub.HasConsoleCommandHandler <- function (key)
+	{
+		return (key in ::HooksHub.ConsoleCommandHandlers);
+	}
+	
+	::HooksHub.GetConsoleCommandHandlerByFunc <- function (func)
+	{
+		foreach (key, val in ::HooksHub.ConsoleCommandHandlers)
+		{
+			if (val == func)
+				return key;
+		}
+		return null;
+	}
+
 	::HooksHub.DbgPrintFuncs <- function ()
 	{
 		foreach (key, val in ::HooksHub.InterceptChatFuncs)
@@ -192,6 +249,12 @@ if (!("HooksHub" in getroottable()))
 			
 		foreach (key, val in ::HooksHub.CanPickupObjectFuncs)
 			printl("[HooksHub][DEBUG] CanPickupObjectFuncs[" + key + "] = " + val);
+		
+		foreach (key, val in ::HooksHub.ChatCommandHandlers)
+			printl("[HooksHub][DEBUG] ChatCommandHandlers[" + key + "] = " + val);
+			
+		foreach (key, val in ::HooksHub.ConsoleCommandHandlers)
+			printl("[HooksHub][DEBUG] ConsoleCommandHandlers[" + key + "] = " + val);
 	}
 	
 	::HooksHub.InterceptChat <- function (msg, speaker)
@@ -211,11 +274,54 @@ if (!("HooksHub" in getroottable()))
 
 			//printl("[HooksHub][DEBUG] " + key + "'s InterceptChat func returned " + r);
 
+			// Global return value will be false if at least one func returns false
 			if (r == false)
 				ret = false;
 		}
+
+		if (::HooksHub.ChatCommandHandlers.len() > 0 && speaker && speaker.IsValid())
+		{
+			// Removing the ending \r\n
+			if (msg.find("\n", msg.len() - 1) != null || msg.find("\r", msg.len() - 1) != null)
+				msg = msg.slice(0, msg.len() - 1);
+			if (msg.find("\n", msg.len() - 1) != null || msg.find("\r", msg.len() - 1) != null)
+				msg = msg.slice(0, msg.len() - 1);
+			
+			local name = speaker.GetPlayerName() + ": ";
+			local text = strip(msg.slice(msg.find(name) + name.len())); // Remove the speaker's name part from the message
+			
+			printl("[HooksHub][DEBUG] InterceptChat - speaker: " + speaker.GetPlayerName() + " - text: " + text);
+			
+			if (text.find(Left4Lib.Settings.hooks_chatcommand_trigger) == 0)
+			{
+				local args = split(text, " ");
+				if (args.len() > 1) // Must have at least 2 arguments: "!handler command"
+				{
+					local handler = args[0].slice(Left4Lib.Settings.hooks_chatcommand_trigger.len());
+					local command = args[1].tolower();
+					
+					printl("[HooksHub][DEBUG] InterceptChat - handler: " + handler + " - command: " + command);
+					
+					if (handler in ::HooksHub.ChatCommandHandlers)
+					{
+						try
+						{
+							::HooksHub.ChatCommandHandlers[handler](speaker, command, args, text);
+						}
+						catch(exception)
+						{
+							error("[HooksHub][ERROR] InterceptChat - Exception in ChatCommandHandler '" + key + "': " + exception + "\n");
+						}
+					}
+				}
+				
+				// If no InterceptChat func wanted to hide the chat, only hide it if the text starts with hooks_chatcommand_trigger and hooks_chatcommand_hide is true
+				if (ret && Left4Lib.Settings.hooks_chatcommand_hide)
+					ret = false;
+			}
+		}
 		
-		// Global return value will be false if at least one func returns false
+		printl("[HooksHub][DEBUG] InterceptChat - ret: " + ret);
 		
 		return ret;
 	}
@@ -299,6 +405,30 @@ if (!("HooksHub" in getroottable()))
 		}
 		
 		// Return values have no meaning here
+		
+		if (arg != null && arg != "" && ::HooksHub.ConsoleCommandHandlers.len() > 0 && playerScript && playerScript.IsValid())
+		{
+			local args = split(arg, ",");
+			if (args.len() > 1) // Must have at least 2 arguments: "handler,command"
+			{
+				local handler = args[0];
+				local command = args[1].tolower();
+					
+				printl("[HooksHub][DEBUG] UserConsoleCommand - handler: " + handler + " - command: " + command);
+				
+				if (handler in ::HooksHub.ConsoleCommandHandlers)
+				{
+					try
+					{
+						::HooksHub.ConsoleCommandHandlers[handler](playerScript, command, args, arg);
+					}
+					catch(exception)
+					{
+						error("[HooksHub][ERROR] UserConsoleCommand - Exception in ConsoleCommandHandler '" + key + "': " + exception + "\n");
+					}
+				}
+			}
+		}
 	}
 	
 	::HooksHub.BotQuery <- function (queryflag, entity, defaultvalue)

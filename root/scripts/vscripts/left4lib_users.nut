@@ -3,8 +3,10 @@
 //     https://steamcommunity.com/id/smilz0
 //------------------------------------------------------
 
+IncludeScript("left4lib_consts");
 IncludeScript("left4lib_utils");
 IncludeScript("left4lib_hooks");
+IncludeScript("left4lib_settings");
 
 // User levels
 enum L4U_LEVEL {
@@ -18,15 +20,10 @@ if (!("Left4Users" in getroottable()))
 {
 	::Left4Users <-
 	{
-		Settings =
-		{
-			file_admins = "left4users/cfg/admins.txt"
-			file_friends = "left4users/cfg/friends.txt"
-			file_griefers = "left4users/cfg/griefers.txt"
-		}
 		Admins = {}
 		OnlineUsers = {}
 		JoiningUsers = {}
+		JustJoinedUsers = {}
 		Events = {}
 	}
 
@@ -155,19 +152,19 @@ if (!("Left4Users" in getroottable()))
 		if (level == "a")
 		{
 			Left4Users.Admins[steamid] <- player.GetPlayerName();
-			Left4Users.SaveAdminsToFile(Left4Users.Settings.file_admins, Left4Users.Admins);
+			Left4Users.SaveAdminsToFile(Left4Lib.Settings.users_file_admins, Left4Users.Admins);
 			
 			levelout = L4U_LEVEL.Admin;
 		}
 		else if (level == "f")
 		{
-			Left4Users.AddToList(steamid, player.GetPlayerName(), Left4Users.Settings.file_friends);
+			Left4Users.AddToList(steamid, player.GetPlayerName(), Left4Lib.Settings.users_file_friends);
 			
 			levelout = L4U_LEVEL.Friend;
 		}
 		else if (level == "g")
 		{
-			Left4Users.AddToList(steamid, player.GetPlayerName(), Left4Users.Settings.file_griefers);
+			Left4Users.AddToList(steamid, player.GetPlayerName(), Left4Lib.Settings.users_file_griefers);
 			
 			levelout = L4U_LEVEL.Griefer;
 		}
@@ -195,10 +192,10 @@ if (!("Left4Users" in getroottable()))
 		if (steamid in ::Left4Users.Admins)
 		{
 			delete ::Left4Users.Admins[steamid];
-			Left4Users.SaveAdminsToFile(Left4Users.Settings.file_admins, Left4Users.Admins);
+			Left4Users.SaveAdminsToFile(Left4Lib.Settings.users_file_admins, Left4Users.Admins);
 		}
-		Left4Users.RemoveFromList(steamid, Left4Users.Settings.file_friends);
-		Left4Users.RemoveFromList(steamid, Left4Users.Settings.file_griefers);
+		Left4Users.RemoveFromList(steamid, Left4Lib.Settings.users_file_friends);
+		Left4Users.RemoveFromList(steamid, Left4Lib.Settings.users_file_griefers);
 	}
 
 	::Left4Users.GetSteamIDUserLevel <- function (steamid)
@@ -207,9 +204,9 @@ if (!("Left4Users" in getroottable()))
 			return L4U_LEVEL.User;
 		else if (steamid in ::Left4Users.Admins)
 			return L4U_LEVEL.Admin;
-		else if (Left4Users.IsInList(steamid, Left4Users.Settings.file_friends))
+		else if (Left4Users.IsInList(steamid, Left4Lib.Settings.users_file_friends))
 			return L4U_LEVEL.Friend;
-		else if (Left4Users.IsInList(steamid, Left4Users.Settings.file_griefers))
+		else if (Left4Users.IsInList(steamid, Left4Lib.Settings.users_file_griefers))
 			return L4U_LEVEL.Griefer;
 		else
 			return L4U_LEVEL.User;
@@ -235,11 +232,11 @@ if (!("Left4Users" in getroottable()))
 				// player is the host but wasn't added to the admins list yet. Add now
 				
 				// But remove him from any other list first
-				Left4Users.RemoveFromList(steamid, Left4Users.Settings.file_friends);
-				Left4Users.RemoveFromList(steamid, Left4Users.Settings.file_griefers);
+				Left4Users.RemoveFromList(steamid, Left4Lib.Settings.users_file_friends);
+				Left4Users.RemoveFromList(steamid, Left4Lib.Settings.users_file_griefers);
 				
 				Left4Users.Admins[steamid] <- player.GetPlayerName();
-				Left4Users.SaveAdminsToFile(Left4Users.Settings.file_admins, Left4Users.Admins);
+				Left4Users.SaveAdminsToFile(Left4Lib.Settings.users_file_admins, Left4Users.Admins);
 				
 				printl("[Left4Users][INFO] Local host " + player.GetPlayerName() + " has been added to the admins list");
 			}
@@ -308,7 +305,7 @@ if (!("Left4Users" in getroottable()))
 	
 	::Left4Users.IsJustJoined <- function (userid)
 	{
-		return (userid in ::Left4Users.JoiningUsers);
+		return (userid in ::Left4Users.JustJoinedUsers);
 	}
 	
 	::Left4Users.InterceptChat <- function (msg, speaker)
@@ -353,7 +350,7 @@ if (!("Left4Users" in getroottable()))
 			arg2 = strip(args[3].tolower());
 		
 		local isCommand = Left4Users.OnAdminCommand(speaker, cmd, arg1, arg2);
-		if (isCommand /*&& Left4Users.Settings.hide_chat_commands*/)
+		if (isCommand /*&& Left4Lib.Settings.hide_chat_commands*/)
 			return false;
 		else
 			return true;
@@ -499,7 +496,7 @@ if (!("Left4Users" in getroottable()))
 		//printl("[Left4Users][DEBUG] OnGameEvent_round_start");
 		
 		// Admins aren't supposed to be that many, so we can keep them in memory
-		Left4Users.Admins = Left4Users.LoadUsersFromFile(Left4Users.Settings.file_admins);
+		Left4Users.Admins = Left4Users.LoadUsersFromFile(Left4Lib.Settings.users_file_admins);
 		
 		::HooksHub.SetUserConsoleCommand("Left4Users", ::Left4Users.UserConsoleCommand);
 		::HooksHub.SetInterceptChat("Left4Users", ::Left4Users.InterceptChat);
@@ -536,22 +533,31 @@ if (!("Left4Users" in getroottable()))
 
 			if (!bot && steamid != "BOT")
 			{
-				printl("[Left4Users][INFO] Player connected: " + name + " - userid: " + userid + " - index: " + index + " - address: " + address + " - steamid: " + steamid + " - xuid: " + xuid + " - bot: " + bot);
+				local level = Left4Users.GetSteamIDUserLevel(steamid);
+				
+				printl("[Left4Users][INFO] Player connected: " + name + " - userid: " + userid + " - index: " + index + " - address: " + address + " - steamid: " + steamid + " - xuid: " + xuid + " - bot: " + bot + " - level: " + level);
 
-				::Left4Users.JoiningUsers[userid] <- 1;
-
-				if (name)
+				if (Left4Lib.Settings.users_max_human_players >= 0 && (Left4Users.OnlineUsers.len() + Left4Users.JoiningUsers.len()) >= Left4Lib.Settings.users_max_human_players)
 				{
-					local level = Left4Users.GetSteamIDUserLevel(steamid);
+					SendToServerConsole("kickid " + steamid + " " + Left4Lib.Settings.users_full_kick_reason);
+					
+					printl("[Left4Users][INFO] Player kicked with reason: " + Left4Lib.Settings.users_full_kick_reason);
+				}
+				else
+				{
+					::Left4Users.JoiningUsers[userid] <- 0;
 
-					if (level == L4U_LEVEL.Admin)
-						Left4Users.AdminNotice("\x03" + "Admin " + name + " connected");
-					else if (level == L4U_LEVEL.Friend)
-						Left4Users.AdminNotice("\x05" + "Friend " + name + " connected");
-					else if (level == L4U_LEVEL.Griefer)
-						Left4Users.AdminNotice("\x04" + "Griefer " + name + " connected");
-					else
-						Left4Users.AdminNotice("\x01" + "User " + name + " connected");
+					if (name)
+					{
+						if (level == L4U_LEVEL.Admin)
+							Left4Users.AdminNotice("\x03" + "Admin " + name + " connected");
+						else if (level == L4U_LEVEL.Friend)
+							Left4Users.AdminNotice("\x05" + "Friend " + name + " connected");
+						else if (level == L4U_LEVEL.Griefer)
+							Left4Users.AdminNotice("\x04" + "Griefer " + name + " connected");
+						else
+							Left4Users.AdminNotice("\x01" + "User " + name + " connected");
+					}
 				}
 			}
 		}
@@ -564,12 +570,16 @@ if (!("Left4Users" in getroottable()))
 			local userid = params["userid"];
 			local player = g_MapScript.GetPlayerFromUserID(userid);
 
-			local joining = (userid in ::Left4Users.JoiningUsers) && Left4Users.JoiningUsers[userid];
-			if (userid in ::Left4Users.JoiningUsers)
-				Left4Users.JoiningUsers[userid] = 0;
+			local isjoining = (userid in ::Left4Users.JoiningUsers);
+			if (isjoining)
+			{
+				::Left4Users.JustJoinedUsers[userid] <- 0;
+				
+				delete ::Left4Users.JoiningUsers[userid];
+			}
 
 			if (player && player.IsValid() && !IsPlayerABot(player))
-				Left4Users.PlayerIn(player, joining);
+				Left4Users.PlayerIn(player, isjoining);
 		}
 	}
 
@@ -605,6 +615,9 @@ if (!("Left4Users" in getroottable()))
 
 			if (userid in ::Left4Users.JoiningUsers)
 				delete ::Left4Users.JoiningUsers[userid];
+
+			if (userid in ::Left4Users.JustJoinedUsers)
+				delete ::Left4Users.JustJoinedUsers[userid];
 
 			if (player && player.IsValid() && IsPlayerABot(player))
 				return;

@@ -4,6 +4,7 @@
 //------------------------------------------------------
 
 IncludeScript("rulescript_base");
+IncludeScript("left4lib_consts");
 
 if (!("ConceptsHub" in getroottable()))
 {

@@ -3,6 +3,8 @@
 //     https://steamcommunity.com/id/smilz0
 //------------------------------------------------------
 
+IncludeScript("left4lib_consts");
+
 if (!("Left4Hud" in getroottable()))
 {
 	::Left4Hud <-
