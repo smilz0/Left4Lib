@@ -34,6 +34,9 @@ const Z_SURVIVOR = 9;
 const Z_MOB = 10;
 const Z_WITCH_BRIDE = 11;
 
+const SURIVORSET_L4D1 = 1;
+const SURIVORSET_L4D2 = 2;
+
 const S_NICK = 0;
 const S_ROCHELLE = 1;
 const S_COACH = 2;
@@ -43,9 +46,13 @@ const S_ZOEY = 1;    // 5
 const S_LOUIS = 2;   // 6
 const S_FRANCIS = 3; // 7
 const EXTRA_S_BILL = 4;
-const EXTRA_S_ZOEY = 9;
+const EXTRA_S_ZOEY = 5; // 9
 const EXTRA_S_FRANCIS = 6;
 const EXTRA_S_LOUIS = 7;
+const EXTRA_S_NICK = 4;
+const EXTRA_S_ROCHELLE = 5;
+const EXTRA_S_ELLIS = 6;
+const EXTRA_S_COACH = 7;
 
 const BUTTON_ATTACK = 1;
 const BUTTON_JUMP = 2;

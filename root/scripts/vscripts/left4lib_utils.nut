@@ -1175,7 +1175,7 @@ if (!("Left4Utils" in getroottable()))
 	::Left4Utils.CanTraceTo <- function (source, dest, mask = TRACE_MASK_DEFAULT, maxDist = 0, altClass = null)
 	{
 		/*
-		// Note: Doing "end = dest.GetOrigin()" doesn't work when the object is lying on it's side with a certain angle because the trace ends right next to the object itself so i add a little offset towards the object's Up.
+		// Note: Doing "end = dest.GetOrigin()" doesn't work when the object is lying on its side with a certain angle because the trace ends right next to the object itself so i add a little offset towards the object's Up.
 		//       Apparently the bot's internal AI is also affected by this bug, it often happens with medkits and pills the bot refuses to pick up.
 		
 		local traceTable = { start = source.EyePosition(), end = dest.GetOrigin() + (dest.GetAngles().Up() * 2), ignore = source, mask = mask };
@@ -1383,6 +1383,79 @@ if (!("Left4Utils" in getroottable()))
 		{
 			if (actor == name)
 				return handle;
+		}
+		
+		return null;
+	}
+
+	::Left4Utils.GetCharacterFromActor <- function (actor, survivorset)
+	{
+		switch (actor.tolower())
+		{
+			case "teengirl":
+			{
+				if (survivorset == SURIVORSET_L4D2)
+					return EXTRA_S_ZOEY;
+				else
+					return S_ZOEY;
+				break;
+			}
+			case "namvet":
+			{
+				if (survivorset == SURIVORSET_L4D2)
+					return EXTRA_S_BILL;
+				else
+					return S_BILL;
+				break;
+			}
+			case "manager":
+			{
+				if (survivorset == SURIVORSET_L4D2)
+					return EXTRA_S_LOUIS;
+				else
+					return S_LOUIS;
+				break;
+			}
+			case "biker":
+			{
+				if (survivorset == SURIVORSET_L4D2)
+					return EXTRA_S_FRANCIS;
+				else
+					return S_FRANCIS;
+				break;
+			}
+			case "gambler":
+			{
+				if (survivorset == SURIVORSET_L4D1)
+					return EXTRA_S_NICK;
+				else
+					return S_NICK;
+				break;
+			}
+			case "producer":
+			{
+				if (survivorset == SURIVORSET_L4D1)
+					return EXTRA_S_ROCHELLE;
+				else
+					return S_ROCHELLE;
+				break;
+			}
+			case "coach":
+			{
+				if (survivorset == SURIVORSET_L4D1)
+					return EXTRA_S_COACH;
+				else
+					return S_COACH;
+				break;
+			}
+			case "mechanic":
+			{
+				if (survivorset == SURIVORSET_L4D1)
+					return EXTRA_S_ELLIS;
+				else
+					return S_ELLIS;
+				break;
+			}
 		}
 		
 		return null;
@@ -2194,7 +2267,7 @@ if (!("Left4Utils" in getroottable()))
 	
 	// Returns the farthest (in the map's flow) pathable position
 	// limitDistance > 0 to limit the calculated path (and so the returned farthest position) to this max (roughly) distance from the survivor's current position
-	// dontStopOnDamaging = true to avoid returning the position of a DAMAGING nav area but to return the first non DAMAGING after that
+	// dontStopOnDamaging = true to avoid returning the position of a DAMAGING nav area but to return the first non DAMAGING after that instead
 	// detourMaxDistance > 0 to try calc an alternative route to get past currently blocked nav areas (this will be the max distance of the detour)
 	// checkGround = true to perform an additional trace check on the ground
 	// debugDrawDuration > 0 to draw the entire calculated path on screen (only visible to the host) for the given amount of time
@@ -2264,7 +2337,7 @@ if (!("Left4Utils" in getroottable()))
 					// We got through blocked areas, let's see if we can calculate a valid alternate path
 					local detourEndPos = Left4Utils.GetFarthestPathableDetourPos(startArea, currentArea, detourMaxDistance, checkGround, debugDrawDuration);
 					if (detourEndPos)
-						ret = detourEndPos; // We got a valid detour, return it's end (area with highest flow)
+						ret = detourEndPos; // We got a valid detour, return its end (area with highest flow)
 					else
 						ret = preBlocked.GetCenter(); // No valid detour, return the position of the last normal area before the first blocked one
 				}
@@ -2892,7 +2965,7 @@ if (!("Left4Utils" in getroottable()))
 
 	// Returns true if the survivor with the given character id can use the given deployed upgrade pack, false if can't (likely already used it)
 	// Note: upgrade_laser_sight seem to keep m_iUsedBySurvivorsMask to 0, so the survivors can always reuse it
-	// Note2: extra (manually spawned with charid > 3) survivor bots don't seem to set their flag when using the upgrade but they still affect the use count, so they can keep reuse the same upgrade as long as it's count is > 0
+	// Note2: extra (manually spawned with charid > 3) survivor bots don't seem to set their flag when using the upgrade but they still affect the use count, so they can keep reuse the same upgrade as long as its count is > 0
 	// Note3: survivor bots don't seem to use incediary/explosive ammo upgrades if they already have at least 1 upgraded bullet in their weapon
 	::Left4Utils.CanUseUpgrade <- function (charid, upgradeent)
 	{
