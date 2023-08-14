@@ -4,7 +4,7 @@
 //------------------------------------------------------
 
 IncludeScript("left4lib_consts");
-IncludeScript("left4lib_settings");
+IncludeScript("left4lib_settingsmanager");
 
 if (!("HooksHub" in getroottable()))
 {
@@ -315,7 +315,7 @@ if (!("HooksHub" in getroottable()))
 					}
 				}
 				
-				// If no InterceptChat func wanted to hide the chat, only hide it if the text starts with hooks_chatcommand_trigger and hooks_chatcommand_hide is true
+				// If no InterceptChat func wanted to hide the chat, only hide it if the text starts with hooks_chatcommand_trigger and hooks_chatcommand_hide is 1
 				if (ret && Left4Lib.Settings.hooks_chatcommand_hide)
 					ret = false;
 			}

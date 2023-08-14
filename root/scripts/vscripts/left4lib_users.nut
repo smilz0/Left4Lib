@@ -6,7 +6,7 @@
 IncludeScript("left4lib_consts");
 IncludeScript("left4lib_utils");
 IncludeScript("left4lib_hooks");
-IncludeScript("left4lib_settings");
+IncludeScript("left4lib_settingsmanager");
 
 // User levels
 enum L4U_LEVEL {
