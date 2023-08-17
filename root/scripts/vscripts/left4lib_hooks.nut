@@ -2,6 +2,78 @@
 //     Author : smilzo
 //     https://steamcommunity.com/id/smilz0
 //------------------------------------------------------
+/*
+	Handles the C++ -> VScript game hooks.
+	
+	NOTE: ::HooksHub isn't available until another addon includes this script.
+	
+	To use add:
+		IncludeScript("left4lib_hooks");
+	on top of your script.
+	
+	NOTE2: This script requires an initialization via:
+		HooksHub.Init();
+	to work.
+	If ::HooksHub exists (because the script was included by another script), the 'Init' function is automatically called upon director initialization ( via 'director_base_addon.nut' )
+	and 'OnGameEvent_round_start'. So you are supposed to include this script before these events or you will need to call the Init function manually.
+	
+	This script acts as a 'dispatcher' for game hooks allowing more than one vscript to receive the hooks.
+	The hooks are:
+		InterceptChat
+		AllowTakeDamage
+		AllowBash
+		UserConsoleCommand
+		BotQuery
+		CanPickupObject
+	The script replaces any active hook vscriot functions with its own functions and calls the hook functions of the scripts that registered, one after the other, when then main hook is called by C++.
+	
+	You register/unregister your hooks to HooksHub with:
+		HooksHub.SetInterceptChat(key, func);
+		HooksHub.RemoveInterceptChat(key);
+		HooksHub.SetAllowTakeDamage(key, func);
+		HooksHub.RemoveAllowTakeDamage(key);
+		HooksHub.SetAllowBash(key, func);
+		HooksHub.RemoveAllowBash(key);
+		HooksHub.SetUserConsoleCommand(key, func);
+		HooksHub.RemoveUserConsoleCommand(key);
+		HooksHub.SetBotQuery(key, func);
+		HooksHub.RemoveBotQuery(key);
+		HooksHub.SetCanPickupObject(key, func);
+		HooksHub.RemoveCanPickupObject(key);
+	
+	Your hook's 'key' must be an unique key that identifies your addon/script (for example i use 'L4F' in Left 4 Fun, 'L4B' in Left 4 Bots and so on).
+	If your 'func' is on the root table, its name must be different from the one of the hook.
+	For example it can be something like this:
+		::MyAllowTakeDamage <- function (damageTable)
+		{
+		}
+	or this:
+		::Left4Fun.AllowTakeDamage <- function (damageTable)
+		{
+		}
+	but not this:
+		::AllowTakeDamage <- function (damageTable)
+		{
+		}
+	
+	CUSTOM CHAT/CONSOLE COMMANDS
+	For receiving chat/console commands for your script, consider using:
+		HooksHub.SetChatCommandHandler(key, func);
+		HooksHub.SetConsoleCommandHandler(key, func);
+		HooksHub.RemoveChatCommandHandler(key);
+		HooksHub.RemoveConsoleCommandHandler(key);
+	instead of registering for the InterceptChat hook. You can also use the same function for both the chat and console commands as the two 'func' have the same parameters.
+	
+	'key' is always your unique addon/script key and will also be the trigger for your commands (!key command - scripted_user_func key,command).
+	'func' is a function like this:
+		::Left4Bots.HandleCommand <- function (player, cmd, args, text)
+		{
+			// 'player' is the entity of the player who sent the command
+			// 'cmd' is the first argument after the key
+			// 'args' is the full list of arguments (including the trigger and the command)
+			// 'text' is the entire command string
+		}
+*/
 
 IncludeScript("left4lib_consts");
 IncludeScript("left4lib_settingsmanager");

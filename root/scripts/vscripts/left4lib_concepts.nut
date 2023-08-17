@@ -2,6 +2,32 @@
 //     Author : smilzo
 //     https://steamcommunity.com/id/smilz0
 //------------------------------------------------------
+/*
+	Allows your script to receive the game concepts.
+	
+	NOTE: ::ConceptsHub isn't available until another addon includes this script.
+	
+	To use add:
+		IncludeScript("left4lib_concepts");
+	on top of your script.
+	
+	Then:
+		ConceptsHub.SetHandler(key, yourfunction);
+	to register an handler identified by 'key' and 'yourfunction' as function.
+	You can do this in the 'OnGameEvent_round_start' event for example (or anywhere else).
+	
+	Stop receiving concepts by unregistering your handler with:
+		ConceptsHub.RemoveHandler(key);
+	
+	Your handler's 'key' must be an unique key that identifies your addon/script (for example i use 'L4F' in Left 4 Fun, 'L4B' in Left 4 Bots and so on).
+	
+	Handler's function should look like this:
+		::YourOnConcept <- function (concept, query)
+		{
+			// concept is the plain concept name (for example: PlayerEmphaticGo)
+			// query is a table with the full concept's query
+		}
+*/
 
 IncludeScript("rulescript_base");
 IncludeScript("left4lib_consts");

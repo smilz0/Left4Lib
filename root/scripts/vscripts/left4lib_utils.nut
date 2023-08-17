@@ -1,3 +1,19 @@
+//------------------------------------------------------
+//     Author : smilzo
+//     https://steamcommunity.com/id/smilz0
+//------------------------------------------------------
+/*
+	Various useful functions.
+	
+	NOTE: ::Left4Utils isn't available until another addon includes this script.
+	
+	To use add:
+		IncludeScript("left4lib_utils");
+	on top of your script.
+	
+	Then simply call the 'Left4Utils.function' you want to call.
+*/
+
 IncludeScript("left4lib_consts");
 
 if (!("Left4Utils" in getroottable()))

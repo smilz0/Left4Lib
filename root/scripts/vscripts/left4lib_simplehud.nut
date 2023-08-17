@@ -2,6 +2,31 @@
 //     Author : smilzo
 //     https://steamcommunity.com/id/smilz0
 //------------------------------------------------------
+/*
+	Simplifies the VScript HUD functions.
+	
+	NOTE: ::Left4Hud isn't available until another addon includes this script.
+	
+	To use add:
+		IncludeScript("left4lib_simplehud");
+	on top of your script.
+	
+	Then:
+		Left4Hud.AddHud(name, slot, flags);
+	to create your hud.
+	
+	Place the hud with:
+		Left4Hud.PlaceHud(name, x, y, w, h);
+	
+	Show the hud:
+		Left4Hud.ShowHud(name);
+	
+	Change its text:
+		Left4Hud.SetHudText(name, text);
+	
+	For more info look here:
+		https://developer.valvesoftware.com/wiki/L4D2_EMS/Appendix:_HUD
+*/
 
 IncludeScript("left4lib_consts");
 

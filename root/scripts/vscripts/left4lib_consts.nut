@@ -2,6 +2,9 @@
 //     Author : smilzo
 //     https://steamcommunity.com/id/smilz0
 //------------------------------------------------------
+/*
+	Shared constants.
+*/
 
 const TEAM_UNKNOWN = 0;
 const TEAM_SPECTATORS = 1;

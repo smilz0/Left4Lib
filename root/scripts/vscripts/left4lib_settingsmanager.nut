@@ -2,6 +2,9 @@
 //     Author : smilzo
 //     https://steamcommunity.com/id/smilz0
 //------------------------------------------------------
+/*
+	You shouldn't use this. It's for L4L internal use for the 'left4lib_hooks' and 'left4lib_users' settings ('ems/left4lib/cfg/settings.txt' file).
+*/
 
 IncludeScript("left4lib_consts");
 IncludeScript("left4lib_utils");

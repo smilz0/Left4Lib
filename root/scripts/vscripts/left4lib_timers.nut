@@ -2,6 +2,27 @@
 //     Author : smilzo
 //     https://steamcommunity.com/id/smilz0
 //------------------------------------------------------
+/*
+	Handles timed function calls and custom Think functions.
+	
+	NOTE: ::Left4Timers isn't available until another addon includes this script.
+	
+	To use add:
+		IncludeScript("left4lib_timers");
+	on top of your script.
+	
+	Then:
+		Left4Timers.AddTimer(timername, delay, yourfunction, params = {}, repeat = false);
+	to register a timer called 'timername' that calls 'yourfunction' after 'delay' passing it 'params'.
+	If repeat is true, 'yourfunction' will be called each 'delay' until you unregister the timer with:
+		Left4Timers.RemoveTimer(timername);
+	
+	For repeating tasks you can also use:
+		Left4Timers.AddThinker(thinkername, delay, yourfunction, params = {});
+	'yourfunction' will be called each 'delay' until you unregister the thinker with:
+		Left4Timers.RemoveThinker(thinkername);
+	The difference is that in this case 'yourfunction' will run in the context of a separate entity that is spawned just to run your thinker function.
+*/
 
 IncludeScript("left4lib_consts");
 

@@ -2,6 +2,25 @@
 //     Author : smilzo
 //     https://steamcommunity.com/id/smilz0
 //------------------------------------------------------
+/*
+	Centralized users management.
+	
+	NOTE: ::Left4Users isn't available until another addon includes this script.
+	
+	To use add:
+		IncludeScript("left4lib_users");
+	on top of your script.
+	
+	Players are automatically assigned their user level when they join the server depending on the list they belong to.
+	Admins add/remove users to a certain list with the:
+		l4u add playername level
+	chat/console command.
+	
+	The only things you may want to do from your script are:
+		Left4Users.GetOnlineUserLevel(userid); // to know the L4U_LEVEL of the player with the given userid (player.GetPlayerUserId())
+		Left4Users.IsJustJoined(userid); // returns whether the given player has joined in the current round (true) or in a previous one (false)
+		Left4Users.AdminNotice(msg); // sends the given message to all the connected admin users
+*/
 
 IncludeScript("left4lib_consts");
 IncludeScript("left4lib_utils");
