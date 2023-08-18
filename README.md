@@ -38,6 +38,14 @@ The **Friend** and **Griefer** lists are saved into the files `ems/left4lib/cfg/
 The players who do not belong to any of these lists are automatically given the normal **User** level.
 
 
+## Addon settings
+L4L also has its own settings. You can find more details [HERE](https://github.com/smilz0/Left4Lib/blob/main/root/scripts/vscripts/left4lib_settings.nut).
+
+***Some of these settings (like hooks_chatcommand_trigger) affect all the addons that use this library.***
+
+You can change the settings by editing the file `ems/left4lib/cfg/settings.txt`.
+
+
 ## Compatibility
 This should be fully compatible with any Admin System/VSLib version and most addons in general.
 
