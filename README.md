@@ -53,4 +53,4 @@ This should be fully compatible with any Admin System/VSLib version and most add
 ### Are you a L4D2 modder?
 You are free to use the features contained in this addon, if you want to. Technical details can be found in the form of comments inside the .nut files.
 
-Only one thing i ask you: please, do not put the L4L files in your addon but consider referencing L4L as an external required addon like i do in L4F, L4B and L4G. Reason for this is that by duplicating this library you will create multiple versions of it making the addons using the library incompatible to each other.
+Only one thing i ask you: please, do not put the L4L files in your addon but consider referencing L4L as an external required addon like i do in L4F, L4B and L4G. Reason for this is that by duplicating this library you will create multiple versions of it making the addons using the library incompatible with each other.
