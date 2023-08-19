@@ -1,5 +1,8 @@
 ::Left4Lib.Settings <-
 {
+	// [1/0] Enable/Disable the "user connected"/"user joined" admin notifications
+	users_admin_notice = 1
+	
 	// File containing the L4U list of users with the ADMIN level
 	users_file_admins = "left4lib/cfg/admins.txt"
 	
