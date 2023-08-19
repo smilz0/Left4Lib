@@ -285,14 +285,17 @@ if (!("Left4Users" in getroottable()))
 		{
 			printl("[Left4Users][INFO] Player joined: " + player.GetPlayerName());
 			
-			if (level == L4U_LEVEL.Admin)
-				Left4Users.AdminNotice("\x03" + "Admin " + player.GetPlayerName() + " joined");
-			else if (level == L4U_LEVEL.Friend)
-				Left4Users.AdminNotice("\x05" + "Friend " + player.GetPlayerName() + " joined");
-			else if (level == L4U_LEVEL.Griefer)
-				Left4Users.AdminNotice("\x04" + "Griefer " + player.GetPlayerName() + " joined");
-			else
-				Left4Users.AdminNotice("\x01" + "User " + player.GetPlayerName() + " joined");
+			if (Left4Lib.Settings.users_admin_notice)
+			{
+				if (level == L4U_LEVEL.Admin)
+					Left4Users.AdminNotice("\x03" + "Admin " + player.GetPlayerName() + " joined");
+				else if (level == L4U_LEVEL.Friend)
+					Left4Users.AdminNotice("\x05" + "Friend " + player.GetPlayerName() + " joined");
+				else if (level == L4U_LEVEL.Griefer)
+					Left4Users.AdminNotice("\x04" + "Griefer " + player.GetPlayerName() + " joined");
+				else
+					Left4Users.AdminNotice("\x01" + "User " + player.GetPlayerName() + " joined");
+			}
 		}
 	}
 
@@ -566,7 +569,7 @@ if (!("Left4Users" in getroottable()))
 				{
 					::Left4Users.JoiningUsers[userid] <- 0;
 
-					if (name)
+					if (name && Left4Lib.Settings.users_admin_notice)
 					{
 						if (level == L4U_LEVEL.Admin)
 							Left4Users.AdminNotice("\x03" + "Admin " + name + " connected");
