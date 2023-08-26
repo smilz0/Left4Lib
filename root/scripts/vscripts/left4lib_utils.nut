@@ -2941,6 +2941,94 @@ if (!("Left4Utils" in getroottable()))
 		}
 	}
 
+	// Returns the tier number (1, 2, 3) for the weapon with the given id
+	// 0 for non weapon items (like medkits etc.)
+	Left4Utils.GetWeaponTierById <- function (weaponId)
+	{
+		switch (weaponId)
+		{
+			case 2:
+			case 3:
+			case 7:
+			case 8:
+			case 33:
+				return 1;
+				break;
+		
+			case 4:
+			case 5:
+			case 6:
+			case 9:
+			case 10:
+			case 11:
+			case 26:
+			case 34:
+			case 35:
+			case 36:
+				return 2;
+				break;
+		
+			case 21:
+			case 37:
+				return 3;
+				break;
+		
+			default:
+				return 0;
+		}
+
+		/*
+			FIRST_AID_KIT,    // 12
+			DEFIBRILLATOR,    // 24
+
+			PAIN_PILLS,       // 15
+			ADRENALINE,       // 23
+			
+			MOLOTOV,          // 13
+			PIPE_BOMB,        // 14
+			VOMITJAR,         // 25
+			
+			CHAINSAW,         // 20
+		*/
+	}
+	
+	// Returns the tier number (1, 2, 3) for the weapon with the given class name
+	// 0 for non weapon items (like medkits etc.)
+	Left4Utils.GetWeaponTierByClass <- function (weaponClass)
+	{
+		switch (weaponClass)
+		{
+			case "weapon_smg":
+			case "weapon_pumpshotgun":
+			case "weapon_smg_silenced":
+			case "weapon_shotgun_chrome":
+			case "weapon_smg_mp5":
+				return 1;
+				break;
+		
+			case "weapon_autoshotgun":
+			case "weapon_rifle":
+			case "weapon_hunting_rifle":
+			case "weapon_rifle_desert":
+			case "weapon_sniper_military":
+			case "weapon_shotgun_spas":
+			case "weapon_rifle_ak47":
+			case "weapon_rifle_sg552":
+			case "weapon_sniper_awp":
+			case "weapon_sniper_scout":
+				return 2;
+				break;
+		
+			case "weapon_grenade_launcher":
+			case "weapon_rifle_m60":
+				return 3;
+				break;
+		
+			default:
+				return 0;
+		}
+	}
+
 	::Left4Utils.HasWeaponId <- function (player, weaponid)
 	{
 		local slot = Left4Utils.GetWeaponSlotById(weaponid);
