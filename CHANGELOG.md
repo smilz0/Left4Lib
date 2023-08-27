@@ -1,5 +1,13 @@
 # Changelog
 
+## [v1.1.0](https://github.com/smilz0/Left4Lib/tree/v1.1.0) (2023-08-27)
+
+[Full Changelog](https://github.com/smilz0/Left4Lib/compare/v1.0...v1.1.0)
+
+**Implemented enhancements:**
+
+- New functions: GetWeaponTierById, GetWeaponTierByClass [\#1](https://github.com/smilz0/Left4Lib/issues/1)
+
 ## [v1.0](https://github.com/smilz0/Left4Lib/tree/v1.0) (2023-08-19)
 
 [Full Changelog](https://github.com/smilz0/Left4Lib/compare/c24032025ea4daf3e37dbe008e17ae57a2f44a40...v1.0)
