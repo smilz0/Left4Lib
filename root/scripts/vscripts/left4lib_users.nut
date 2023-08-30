@@ -12,7 +12,7 @@
 	on top of your script.
 	
 	Players are automatically assigned their user level when they join the server depending on the list they belong to.
-	Admins add/remove users to a certain list with the:
+	Admins can add/remove users to a certain list with the:
 		l4u add playername level
 	chat/console command.
 	
