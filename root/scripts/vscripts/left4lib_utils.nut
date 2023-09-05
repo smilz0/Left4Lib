@@ -216,6 +216,15 @@ if (!("Left4Utils" in getroottable()))
 		return split(fileContents, "\n");
 	}
 
+	::Left4Utils.StringToFileCRLF <- function (fileName, content)
+	{
+		content = Left4Utils.StringReplace(content, "\\r", "\n");
+		content = Left4Utils.StringReplace(content, "\\n\\n", "\n");   // Basically: any CRLF combination ("\n", "\r", "\r\n") becomes "\n"
+
+		StringToFile(fileName, content); // StringToFile seems to convert "\n" to the current OS CRLF char(s).
+		                                 // Infact it converts "\n" to "\r\n" on Windows - TODO: to confirm it's also the case on Linux and Mac
+	}
+
 	::Left4Utils.StringListToFile <- function (fileName, stringList, sort = false)
 	{
 		if (!stringList)
@@ -236,7 +245,7 @@ if (!("Left4Utils" in getroottable()))
 		                                      // Infact it converts "\n" to "\r\n" on Windows - TODO: to confirm it's also the case on Linux and Mac
 	}
 
-	::Left4Utils.LoadSettingsFromFile <- function (fileName, scope, logFunc)
+	::Left4Utils.LoadSettingsFromFile <- function (fileName, scope, logFunc, newSlot = false)
 	{
 		local settings = Left4Utils.FileToStringList(fileName);
 		if (!settings)
@@ -249,6 +258,8 @@ if (!("Left4Utils" in getroottable()))
 			{
 				try
 				{
+					if (newSlot)
+						setting = Left4Utils.StringReplace(setting, "=", "<-");
 					local compiledscript = compilestring(scope + setting);
 					compiledscript();
 				}
