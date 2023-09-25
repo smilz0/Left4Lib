@@ -86,6 +86,18 @@ if (!("Left4Utils" in getroottable()))
 			weapon_upgrade_item = 55      		// (upgrade_*)
 		}
 
+		//
+		CarriableWeaponModels =
+		{
+			none = 0
+			gascan001a = 16
+			propanecanister001a = 17
+			oxygentank01 = 18
+			gnome = 27
+			w_cola = 28
+			explosive_box001 = 29
+		}
+
 		// 
 		MeleeWeaponId =
 		{
@@ -798,6 +810,18 @@ if (!("Left4Utils" in getroottable()))
 		return null;
 	}
 	
+	::Left4Utils.GetFirstShovableCommonInfectedWithin <- function (player, radius = 1000)
+	{
+		local ent = null;
+		while (ent = Entities.FindByClassnameWithin(ent, "infected", player.GetOrigin(), radius))
+		{
+			// Idk if there is a better way to check whether the common infected is already staggering other than checking the activity name of his current animation
+			if (ent.IsValid() && NetProps.GetPropInt(ent, "m_lifeState") == 0 && Left4Utils.CanTraceTo(player, ent) && ent.GetSequenceActivityName(ent.GetSequence()).find("_SHOVED_") == null)
+				return ent;
+		}
+		return null;
+	}
+	
 	::Left4Utils.GetCommonInfectedWithin <- function (player, radius = 1000)
 	{
 		local t = {};
@@ -843,7 +867,7 @@ if (!("Left4Utils" in getroottable()))
 		while (ent = Entities.FindInSphere(ent, player.GetOrigin(), radius))
 		{
 			// Note: we are counting both weapon_first_aid_kit and weapon_first_aid_kit_spawn
-			if (ent.IsValid() && ent.GetClassname().find("weapon_first_aid_kit") != null && NetProps.GetPropEntity(ent, "m_hOwner") == null)
+			if (ent.IsValid() && ent.GetClassname().find("weapon_first_aid_kit") != null && ent.GetMoveParent() == null)
 				t[++i] <- ent;
 		}
 		return t;
@@ -2717,7 +2741,7 @@ if (!("Left4Utils" in getroottable()))
 				local dot = facing.Dot(toEnt);
 				if (dot > bestDot)
 				{
-					if (NetProps.GetPropInt(ent, "m_hOwner") <= 0 && ent.GetModelName() != "" && ent.GetClassname() != "worldspawn" && (!visibleOnly || Left4Utils.CanTraceTo(player, ent)))
+					if (ent.GetMoveParent() == null && ent.GetModelName() != "" && ent.GetClassname() != "worldspawn" && (!visibleOnly || Left4Utils.CanTraceTo(player, ent)))
 					{
 						bestDot = dot;
 						bestEnt = ent;
@@ -2735,7 +2759,7 @@ if (!("Left4Utils" in getroottable()))
 				local dot = facing.Dot(toEnt);
 				if (dot > bestDot)
 				{
-					if (NetProps.GetPropInt(ent, "m_hOwner") && (!visibleOnly || Left4Utils.CanTraceTo(player, ent)))
+					if (ent.GetMoveParent() == null && (!visibleOnly || Left4Utils.CanTraceTo(player, ent)))
 					{
 						bestDot = dot;
 						bestEnt = ent;
@@ -2770,6 +2794,25 @@ if (!("Left4Utils" in getroottable()))
 		
 		player.GiveItem(itemClass);
 		Left4Timers.AddTimer(null, 0.2, Left4Utils.SetItemSkin, { player = player, itemClass = itemClass, skinNumber = skinNumber }, false);
+	}
+
+	::Left4Utils.GetCarriableIdByModel <- function (modelName)
+	{
+		//models/props_junk/gnome.mdl
+		//models/props_junk/gascan001a.mdl
+		//models/props_junk/propanecanister001a.mdl
+		//models/props_junk/explosive_box001.mdl
+		//models/props_equipment/oxygentank01.mdl
+		//models/w_models/weapons/w_cola.mdl
+		
+		local mdl = Left4Utils.StringReplace(modelName, "models/props_junk/", "");
+		mdl = Left4Utils.StringReplace(mdl, "models/props_equipment/", "");
+		mdl = Left4Utils.StringReplace(mdl, "models/w_models/weapons/", "");
+		mdl = Left4Utils.StringReplace(mdl, ".mdl", "");
+		if (mdl in Left4Utils.CarriableWeaponModels)
+			return Left4Utils.CarriableWeaponModels[mdl];
+		else
+			return Left4Utils.CarriableWeaponModels.none;
 	}
 
 	::Left4Utils.GetMeleeIdByModel <- function (modelName)
@@ -2848,6 +2891,8 @@ if (!("Left4Utils" in getroottable()))
 			
 			id = Left4Utils.UpgradeWeaponId[className];
 		}
+		else if (className == "prop_physics")
+			id = Left4Utils.GetCarriableIdByModel(weaponent.GetModelName());
 		
 		//printl("Left4Utils.GetWeaponId - id: " + id);
 		
@@ -3040,20 +3085,32 @@ if (!("Left4Utils" in getroottable()))
 		}
 	}
 
-	::Left4Utils.HasWeaponId <- function (player, weaponid)
+	::Left4Utils.HasWeaponId <- function (player, weaponid, ammoPercent = 0)
 	{
 		local slot = Left4Utils.GetWeaponSlotById(weaponid);
 		if (slot >= 0)
 		{
 			local weapon = Left4Utils.GetInventoryItemInSlot(player, "slot" + slot);
-			return (weapon != null && weapon.IsValid() && Left4Utils.GetWeaponId(weapon) == weaponid);
+			return (weapon != null && weapon.IsValid() && Left4Utils.GetWeaponId(weapon) == weaponid && (ammoPercent == 0 || Left4Utils.GetAmmoPercent(weapon) == ammoPercent));
 		}
 		
 		local inv = {};
 		GetInvTable(player, inv);
 		foreach (weapon in inv)
 		{
-			if (weapon != null && weapon.IsValid() && Left4Utils.GetWeaponId(weapon) == weaponid)
+			if (weapon != null && weapon.IsValid() && Left4Utils.GetWeaponId(weapon) == weaponid && (ammoPercent == 0 || Left4Utils.GetAmmoPercent(weapon) == ammoPercent))
+				return true;
+		}
+		return false;
+	}
+
+	::Left4Utils.HasWeaponEnt <- function (player, weaponEnt)
+	{
+		local inv = {};
+		GetInvTable(player, inv);
+		foreach (weapon in inv)
+		{
+			if (weapon == weaponEnt)
 				return true;
 		}
 		return false;
@@ -3066,7 +3123,7 @@ if (!("Left4Utils" in getroottable()))
 		
 		local ammoType = NetProps.GetPropInt(weaponent, "m_iPrimaryAmmoType");
 		local maxAmmo = Left4Utils.GetMaxAmmo(ammoType) + weaponent.GetMaxClip1();
-		local owner = NetProps.GetPropEntity(weaponent, "m_hOwner");
+		local owner = weaponent.GetMoveParent();
 		if (owner && owner.IsPlayer())
 			return (100.0 / maxAmmo) * (NetProps.GetPropIntArray(owner, "m_iAmmo", ammoType) + weaponent.Clip1());
 		else
