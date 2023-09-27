@@ -3144,5 +3144,15 @@ if (!("Left4Utils" in getroottable()))
 		return (NetProps.GetPropInt(upgradeent, "m_iUsedBySurvivorsMask") & (1 << charid)) == 0;
 	}
 
+	::Left4Utils.Min <- function (value1, value2)
+	{
+		return (value2 < value1) ? value2 : value1;
+	}
+
+	::Left4Utils.Max <- function (value1, value2)
+	{
+		return (value2 > value1) ? value2 : value1;
+	}
+
 	//
 }
