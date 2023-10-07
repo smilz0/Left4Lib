@@ -799,24 +799,24 @@ if (!("Left4Utils" in getroottable()))
 		return ret;
 	}
 	
-	::Left4Utils.GetFirstVisibleCommonInfectedWithin <- function (player, radius = 1000)
+	::Left4Utils.GetFirstVisibleCommonInfectedWithin <- function (player, radius = 1000, mask = TRACE_MASK_DEFAULT)
 	{
 		local ent = null;
 		while (ent = Entities.FindByClassnameWithin(ent, "infected", player.GetOrigin(), radius))
 		{
-			if (ent.IsValid() && Left4Utils.CanTraceTo(player, ent))
+			if (ent.IsValid() && Left4Utils.CanTraceTo(player, ent, mask))
 				return ent;
 		}
 		return null;
 	}
 	
-	::Left4Utils.GetFirstShovableCommonInfectedWithin <- function (player, radius = 1000)
+	::Left4Utils.GetFirstShovableCommonInfectedWithin <- function (player, radius = 1000, mask = TRACE_MASK_DEFAULT)
 	{
 		local ent = null;
 		while (ent = Entities.FindByClassnameWithin(ent, "infected", player.GetOrigin(), radius))
 		{
 			// Idk if there is a better way to check whether the common infected is already staggering other than checking the activity name of his current animation
-			if (ent.IsValid() && NetProps.GetPropInt(ent, "m_lifeState") == 0 && Left4Utils.CanTraceTo(player, ent) && ent.GetSequenceActivityName(ent.GetSequence()).find("_SHOVED_") == null)
+			if (ent.IsValid() && NetProps.GetPropInt(ent, "m_lifeState") == 0 && Left4Utils.CanTraceTo(player, ent, mask) && ent.GetSequenceActivityName(ent.GetSequence()).find("_SHOVED_") == null)
 				return ent;
 		}
 		return null;
@@ -835,25 +835,25 @@ if (!("Left4Utils" in getroottable()))
 		return t;
 	}
 	
-	::Left4Utils.GetSpecialInfectedWithin <- function (player, radius = 1000)
+	::Left4Utils.GetSpecialInfectedWithin <- function (player, radius = 1000, mask = TRACE_MASK_DEFAULT)
 	{
 		local t = {};
 		local ent = null;
 		local i = -1;
 		while (ent = Entities.FindByClassnameWithin(ent, "player", player.GetOrigin(), radius))
 		{
-			if (ent.IsValid() && !ent.IsDead() && !ent.IsDying() && ent.GetZombieType() != Z_SURVIVOR && !ent.IsGhost() && Left4Utils.CanTraceTo(player, ent))
+			if (ent.IsValid() && !ent.IsDead() && !ent.IsDying() && ent.GetZombieType() != Z_SURVIVOR && !ent.IsGhost() && Left4Utils.CanTraceTo(player, ent, mask))
 				t[++i] <- ent;
 		}
 		return t;
 	}
 	
-	::Left4Utils.HasSpecialInfectedWithin <- function (player, radius = 1000)
+	::Left4Utils.HasSpecialInfectedWithin <- function (player, radius = 1000, mask = TRACE_MASK_DEFAULT)
 	{
 		local ent = null;
 		while (ent = Entities.FindByClassnameWithin(ent, "player", player.GetOrigin(), radius))
 		{
-			if (ent.IsValid() && !ent.IsDead() && !ent.IsDying() && ent.GetZombieType() != Z_SURVIVOR && !ent.IsGhost() && Left4Utils.CanTraceTo(player, ent))
+			if (ent.IsValid() && !ent.IsDead() && !ent.IsDying() && ent.GetZombieType() != Z_SURVIVOR && !ent.IsGhost() && Left4Utils.CanTraceTo(player, ent, mask))
 				return true;
 		}
 		return false;
@@ -1395,7 +1395,7 @@ if (!("Left4Utils" in getroottable()))
 		bot.SnapEyeAngles(angles);
 	}
 	
-	::Left4Utils.BotGetFarthestPathablePos <- function (bot, radius)
+	::Left4Utils.BotGetFarthestPathablePos <- function (bot, radius, mask = TRACE_MASK_DEFAULT)
 	{
 		local ret = null;
 		local maxDist = 0;
@@ -1403,7 +1403,7 @@ if (!("Left4Utils" in getroottable()))
 		{
 			local p = bot.TryGetPathableLocationWithin(radius);
 			local dist = (p - bot.GetOrigin()).Length();
-			if (dist > maxDist && Left4Utils.CanTraceToPos(bot, p))
+			if (dist > maxDist && Left4Utils.CanTraceToPos(bot, p, mask))
 			{
 				ret = p;
 				maxDist = dist;
@@ -2714,7 +2714,7 @@ if (!("Left4Utils" in getroottable()))
 		DoEntFire("!picker", "CallScriptFunction", "GetPicker", 0, player, player);
 		
 	*/
-	::Left4Utils.GetPickerEntity <- function (player, radius = 999999, threshold = 0.95, visibleOnly = true, entClass = null)
+	::Left4Utils.GetPickerEntity <- function (player, radius = 999999, threshold = 0.95, visibleOnly = true, entClass = null, mask = TRACE_MASK_DEFAULT)
 	{
 		if (!player || !player.IsValid())
 			return null;
@@ -2741,7 +2741,7 @@ if (!("Left4Utils" in getroottable()))
 				local dot = facing.Dot(toEnt);
 				if (dot > bestDot)
 				{
-					if (ent.GetMoveParent() == null && ent.GetModelName() != "" && ent.GetClassname() != "worldspawn" && (!visibleOnly || Left4Utils.CanTraceTo(player, ent)))
+					if (ent.GetMoveParent() == null && ent.GetModelName() != "" && ent.GetClassname() != "worldspawn" && (!visibleOnly || Left4Utils.CanTraceTo(player, ent, mask)))
 					{
 						bestDot = dot;
 						bestEnt = ent;
@@ -2759,7 +2759,7 @@ if (!("Left4Utils" in getroottable()))
 				local dot = facing.Dot(toEnt);
 				if (dot > bestDot)
 				{
-					if (ent.GetMoveParent() == null && (!visibleOnly || Left4Utils.CanTraceTo(player, ent)))
+					if (ent.GetMoveParent() == null && (!visibleOnly || Left4Utils.CanTraceTo(player, ent, mask)))
 					{
 						bestDot = dot;
 						bestEnt = ent;
@@ -2794,6 +2794,26 @@ if (!("Left4Utils" in getroottable()))
 		
 		player.GiveItem(itemClass);
 		Left4Timers.AddTimer(null, 0.2, Left4Utils.SetItemSkin, { player = player, itemClass = itemClass, skinNumber = skinNumber }, false);
+	}
+
+	::Left4Utils.GetCarriableModelById <- function (weaponId)
+	{
+		switch (weaponId)
+		{
+			case Left4Utils.WeaponId.weapon_gascan:
+				return "models/props_junk/gascan001a.mdl";
+			case Left4Utils.WeaponId.weapon_cola_bottles:
+				return "models/w_models/weapons/w_cola.mdl";
+			case Left4Utils.WeaponId.weapon_gnome:
+				return "models/props_junk/gnome.mdl";
+			case Left4Utils.WeaponId.weapon_propanetank:
+				return "models/props_junk/propanecanister001a.mdl";
+			case Left4Utils.WeaponId.weapon_oxygentank:
+				return "models/props_equipment/oxygentank01.mdl";
+			case Left4Utils.WeaponId.weapon_fireworkcrate:
+				return "models/props_junk/explosive_box001.mdl";
+		}
+		return null;
 	}
 
 	::Left4Utils.GetCarriableIdByModel <- function (modelName)
@@ -3152,6 +3172,19 @@ if (!("Left4Utils" in getroottable()))
 	::Left4Utils.Max <- function (value1, value2)
 	{
 		return (value2 > value1) ? value2 : value1;
+	}
+
+	::Left4Utils.TableKeyFromValue <- function (table, value)
+	{
+		if (!table)
+			return null;
+		
+		foreach (k, v in table)
+		{
+			if (v == value)
+				return k;
+		}
+		return null;
 	}
 
 	//
