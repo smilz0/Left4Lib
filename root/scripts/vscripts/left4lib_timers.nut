@@ -95,7 +95,18 @@ if (!("Left4Timers" in getroottable()))
 				}
 				catch(exception)
 				{
-					error("[Left4Timers][ERROR] Exception in timer '" + timerName + "': " + exception + " (" + timer.DbgInfo + ")\n");
+					error("[Left4Timers][ERROR] Exception in timer '" + timerName + "': " + exception + " (" + timer.DbgInfo + ") - Params:\n");
+					error("[Left4Timers][ERROR] {\n");
+					foreach (k, v in timer.params)
+					{
+						if (typeof v == "table")
+							error("[Left4Timers][ERROR]   " + k + " = (table)\n");
+						else if (typeof v == "array")
+							error("[Left4Timers][ERROR]   " + k + " = (array)\n");
+						else
+							error("[Left4Timers][ERROR]   " + k + " = " + v + "\n");
+					}
+					error("[Left4Timers][ERROR] }\n");
 				}
 			}
 		}
