@@ -1,5 +1,14 @@
 # Changelog
 
+## [v1.2.0](https://github.com/smilz0/Left4Lib/tree/v1.2.0) (2023-10-09)
+
+[Full Changelog](https://github.com/smilz0/Left4Lib/compare/v1.1.0...v1.2.0)
+
+**Implemented enhancements:**
+
+- Support functions for the new L4B2 features [\#3](https://github.com/smilz0/Left4Lib/issues/3)
+- Minor changes [\#2](https://github.com/smilz0/Left4Lib/issues/2)
+
 ## [v1.1.0](https://github.com/smilz0/Left4Lib/tree/v1.1.0) (2023-08-27)
 
 [Full Changelog](https://github.com/smilz0/Left4Lib/compare/v1.0...v1.1.0)
