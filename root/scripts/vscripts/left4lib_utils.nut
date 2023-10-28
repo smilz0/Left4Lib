@@ -1165,7 +1165,7 @@ if (!("Left4Utils" in getroottable()))
 		return { pos = traceTable.pos, valid = valid };
 	}
 	
-	::Left4Utils.FindGround <- function (origin, angles, degrees, debugShow = false, debugShowTime = 10)
+	::Left4Utils.FindGround <- function (origin, angles, degrees, debugShow = false, debugShowTime = 10, posDist = 35, ignoreEnt = null)
 	{
 		local yaw = angles.Yaw() + degrees;
 		if (yaw > 360)
@@ -1173,11 +1173,13 @@ if (!("Left4Utils" in getroottable()))
 		
 		local forward = QAngle(angles.Pitch(), yaw, 0).Forward();
 		
-		local _pos = origin + (forward * 35);
+		local _pos = origin + (forward * posDist);
 		local _p1 = origin + (forward * 10);
-		local _p2 = origin + (forward * 55);
+		local _p2 = origin + (forward * (posDist + 20));
 		
 		local traceTable = { start = _p1, end = _p2, mask = TRACE_MASK_DEFAULT };
+		if (ignoreEnt)
+			traceTable.ignore <- ignoreEnt;
 		TraceLine(traceTable);
 		if (traceTable.hit)
 			return null;
