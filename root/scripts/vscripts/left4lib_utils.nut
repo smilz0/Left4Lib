@@ -257,6 +257,7 @@ if (!("Left4Utils" in getroottable()))
 		                                      // Infact it converts "\n" to "\r\n" on Windows - TODO: to confirm it's also the case on Linux and Mac
 	}
 
+	// Here for backward compatibility but it's strongly recommended to move to the new LoadSettingsFromFileNew
 	::Left4Utils.LoadSettingsFromFile <- function (fileName, scope, logFunc, newSlot = false)
 	{
 		local settings = Left4Utils.FileToStringList(fileName);
@@ -286,6 +287,36 @@ if (!("Left4Utils" in getroottable()))
 		return true;
 	}
 
+	::Left4Utils.LoadSettingsFromFileNew <- function (fileName, scope, logger, newSlot = false)
+	{
+		local settings = Left4Utils.FileToStringList(fileName);
+		if (!settings)
+			return false;
+
+		foreach (setting in settings)
+		{
+			setting = Left4Utils.StripComments(setting);
+			if (setting != "")
+			{
+				try
+				{
+					if (newSlot)
+						setting = Left4Utils.StringReplace(setting, "=", "<-");
+					local compiledscript = compilestring(scope + setting);
+					compiledscript();
+				}
+				catch(exception)
+				{
+					logger.Error(exception);
+				}
+			}
+		}
+		logger.Info("Settings loaded");
+		
+		return true;
+	}
+
+	// Here for backward compatibility but it's strongly recommended to move to the new SaveSettingsToFileNew
 	::Left4Utils.SaveSettingsToFile <- function (fileName, settings, logFunc)
 	{
 		local settingList = [];
@@ -301,6 +332,22 @@ if (!("Left4Utils" in getroottable()))
 		logFunc(LOG_LEVEL_INFO, "Settings saved");
 	}
 
+	::Left4Utils.SaveSettingsToFileNew <- function (fileName, settings, logger)
+	{
+		local settingList = [];
+		foreach(key, value in settings)
+		{
+			if (typeof(value) == "string")
+				value = "\"" + value + "\"";
+			
+			settingList.append(key + " = " + value);
+		}
+		Left4Utils.StringListToFile(fileName, settingList, true);
+		
+		logger.Info("Settings saved");
+	}
+
+	// Here for backward compatibility but it's strongly recommended to move to the new PrintSettingsNew
 	::Left4Utils.PrintSettings <- function (settings, logFunc, prefix = "[Settings] ")
 	{
 		foreach(key, value in settings)
@@ -312,6 +359,18 @@ if (!("Left4Utils" in getroottable()))
 		}
 	}
 
+	::Left4Utils.PrintSettingsNew <- function (settings, logger, prefix = "[Settings] ")
+	{
+		foreach(key, value in settings)
+		{
+			if (typeof(value) == "string")
+				value = "\"" + value + "\"";
+			
+			logger.Info(prefix + key + " = " + value);
+		}
+	}
+
+	// Here for backward compatibility but it's strongly recommended to move to the new LoadAdminsFromFileNew
 	::Left4Utils.LoadAdminsFromFile <- function (fileName, logFunc)
 	{
 		local ret = {};
@@ -344,6 +403,38 @@ if (!("Left4Utils" in getroottable()))
 		return ret;
 	}
 
+	::Left4Utils.LoadAdminsFromFileNew <- function (fileName, logger)
+	{
+		local ret = {};
+		
+		local admins = Left4Utils.FileToStringList(fileName);
+		if (!admins)
+			return ret;
+		
+		foreach (admin in admins)
+		{
+			local values = split(admin, "//");
+			if (values.len() != 2)
+				logger.Warning("Invalid admin line: " + admin);
+			else
+			{
+				local key = values[0];
+				local value = values[1];
+				
+				if (!key || !value)
+					logger.Warning("Invalid admin line: " + admin);
+				else
+				{
+					key = strip(key);
+					value = strip(value);
+					
+					ret[key] <- value;
+				}
+			}
+		}
+		return ret;
+	}
+
 	::Left4Utils.SaveAdminsToFile <- function (fileName, admins)
 	{
 		local adminList = [];
@@ -352,6 +443,7 @@ if (!("Left4Utils" in getroottable()))
 		Left4Utils.StringListToFile(fileName, adminList, true);
 	}
 
+	// Here for backward compatibility but it's strongly recommended to move to the new LoadCvarsFromFileNew
 	::Left4Utils.LoadCvarsFromFile <- function (fileName, logFunc)
 	{
 		local count = 0;
@@ -385,6 +477,51 @@ if (!("Left4Utils" in getroottable()))
 						value = strip(value);
 						
 						logFunc(LOG_LEVEL_DEBUG, "CVAR: " + command + " " + value);
+						
+						Convars.SetValue(command, value);
+						
+						count++;
+					}
+				}
+			}
+		}
+		
+		return count;
+	}
+
+	::Left4Utils.LoadCvarsFromFileNew <- function (fileName, logger)
+	{
+		local count = 0;
+
+		local cvars = Left4Utils.FileToStringList(fileName);
+		if (!cvars)
+			return count;
+
+		foreach (cvar in cvars)
+		{
+			//logger.Debug(cvar);
+			cvar = Left4Utils.StringReplace(cvar, "\\t", "");
+			cvar = Left4Utils.StripComments(cvar);
+			if (cvar && cvar != "")
+			{
+				cvar = strip(cvar);
+				//logger.Debug(cvar);
+			
+				if (cvar && cvar != "")
+				{
+					local idx = cvar.find(" ");
+					if (idx != null)
+					{
+						local command = cvar.slice(0, idx);
+						command = Left4Utils.StringReplace(command, "\"", "");
+						command = strip(command);
+						//logger.Debug(command);
+						
+						local value = cvar.slice(idx + 1);
+						value = Left4Utils.StringReplace(value, "\"", "");
+						value = strip(value);
+						
+						logger.Debug("CVAR: " + command + " " + value);
 						
 						Convars.SetValue(command, value);
 						
