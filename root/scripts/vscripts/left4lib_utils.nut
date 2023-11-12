@@ -1410,10 +1410,11 @@ if (!("Left4Utils" in getroottable()))
 		local traceTable = { start = source.EyePosition(), end = pos, ignore = source, mask = mask };
 		TraceLine(traceTable);
 		
-		if (traceTable.hit || traceTable.fraction < 0.9)
-			return false;
-		
-		return true;
+		//lxc i think it's need some adjust for better fault tolerance
+		return (traceTable.fraction > 0.95);
+		//if (traceTable.hit || traceTable.fraction < 0.9)
+		//	return false;
+		//return true;
 	}
 	
 	// Returns: null = no looking position, (Vector) = looking position
