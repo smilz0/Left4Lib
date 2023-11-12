@@ -76,7 +76,7 @@ if (!("ConceptsHub" in getroottable()))
 		{
 			if (key.tolower() == "concept")
 			{
-				concept = val;
+				concept = val == null ? null : val.tostring();
 				break;
 			}
 		}
