@@ -1,5 +1,13 @@
 # Changelog
 
+## [v1.3.0](https://github.com/smilz0/Left4Lib/tree/v1.3.0) (2023-11-12)
+
+[Full Changelog](https://github.com/smilz0/Left4Lib/compare/v1.2.0...v1.3.0)
+
+**Implemented enhancements:**
+
+- Added Left4Logger class [\#4](https://github.com/smilz0/Left4Lib/issues/4)
+
 ## [v1.2.0](https://github.com/smilz0/Left4Lib/tree/v1.2.0) (2023-10-09)
 
 [Full Changelog](https://github.com/smilz0/Left4Lib/compare/v1.1.0...v1.2.0)
