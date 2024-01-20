@@ -3327,5 +3327,17 @@ if (!("Left4Utils" in getroottable()))
 		return null;
 	}
 
+	::Left4Utils.SpawnNavBlocker <- function(targetname, origin, mins, maxs, teamToBlock = -1, affectsFlow = 1, startBlocked = true)
+	{
+		SpawnEntityFromTable("script_nav_blocker", {targetname = targetname, teamToBlock = teamToBlock, origin = origin, affectsFlow = affectsFlow});
+
+		EntFire(targetname, "AddOutput", "mins " + mins);
+		EntFire(targetname, "AddOutput", "maxs " + maxs);
+		EntFire(targetname, "AddOutput", "solid 2");
+
+		if (startBlocked)
+			EntFire(targetname, "BlockNav", "", 0.01);
+	}
+
 	//
 }
