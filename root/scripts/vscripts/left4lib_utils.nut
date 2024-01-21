@@ -3339,5 +3339,11 @@ if (!("Left4Utils" in getroottable()))
 			EntFire(targetname, "BlockNav", "", 0.01);
 	}
 
+	::Left4Utils.IsPlayerInWater <- function(player)
+	{
+		local area = player.GetLastKnownArea();
+		return (area && area.IsValid() && area.IsUnderwater());
+	}
+
 	//
 }
