@@ -2993,8 +2993,6 @@ if (!("Left4Utils" in getroottable()))
 		//	return id;
 		
 		local className = weaponent.GetClassname();
-		//printl("Left4Utils.GetWeaponId - className: " + className);
-		
 		if (className.find("weapon_") != null)
 		{
 			// weapon_*
@@ -3005,10 +3003,7 @@ if (!("Left4Utils" in getroottable()))
 				// weapon_*_spawn
 				
 				if (NetProps.GetPropInt(weaponent, "m_itemCount") <= 0)
-				{
-					//printl("Left4Utils.GetWeaponId - m_itemCount <= 0");
 					return Left4Utils.WeaponId.none;
-				}
 				
 				id = NetProps.GetPropInt(weaponent, "m_weaponID");
 			}
@@ -3031,8 +3026,6 @@ if (!("Left4Utils" in getroottable()))
 				else
 					className = NetProps.GetPropString(weaponent, "m_strMapSetScriptName");
 				
-				//printl("Left4Utils.GetWeaponId - melee: " + className);
-				
 				if (className in Left4Utils.MeleeWeaponId)
 					id = Left4Utils.MeleeWeaponId[className];
 				else
@@ -3044,17 +3037,12 @@ if (!("Left4Utils" in getroottable()))
 			// upgrade_*
 			
 			if (NetProps.GetPropInt(weaponent, "m_itemCount") <= 0)
-			{
-				//printl("Left4Utils.GetWeaponId - m_itemCount <= 0 (upgrade)");
 				return Left4Utils.UpgradeWeaponId.none;
-			}
 			
 			id = Left4Utils.UpgradeWeaponId[className];
 		}
 		else if (className == "prop_physics")
 			id = Left4Utils.GetCarriableIdByModel(weaponent.GetModelName());
-		
-		//printl("Left4Utils.GetWeaponId - id: " + id);
 		
 		return id;
 	}
@@ -3343,6 +3331,11 @@ if (!("Left4Utils" in getroottable()))
 	{
 		local area = player.GetLastKnownArea();
 		return (area && area.IsValid() && area.IsUnderwater());
+	}
+
+	::Left4Utils.RandomInt <- function(min, max)
+	{
+		return min + rand() % (max + 1 - min);
 	}
 
 	//
