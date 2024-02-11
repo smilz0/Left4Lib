@@ -1,5 +1,9 @@
 # Changelog
 
+## [v1.3.1](https://github.com/smilz0/Left4Lib/tree/v1.3.1) (2024-02-10)
+
+[Full Changelog](https://github.com/smilz0/Left4Lib/compare/v1.3.0...v1.3.1)
+
 ## [v1.3.0](https://github.com/smilz0/Left4Lib/tree/v1.3.0) (2023-11-12)
 
 [Full Changelog](https://github.com/smilz0/Left4Lib/compare/v1.2.0...v1.3.0)
