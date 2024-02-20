@@ -114,7 +114,7 @@ if (!("Left4Utils" in getroottable()))
 			machete = 110
 			pitchfork = 111
 			shovel = 112
-			riot_shield = 113
+			riotshield = 113	// thx LittleBigSmoak
 			tonfa = 114
 		}
 
@@ -2965,21 +2965,38 @@ if (!("Left4Utils" in getroottable()))
 		//models/props_equipment/oxygentank01.mdl
 		//models/w_models/weapons/w_cola.mdl
 		
+		/*
 		local mdl = Left4Utils.StringReplace(modelName, "models/props_junk/", "");
 		mdl = Left4Utils.StringReplace(mdl, "models/props_equipment/", "");
 		mdl = Left4Utils.StringReplace(mdl, "models/w_models/weapons/", "");
 		mdl = Left4Utils.StringReplace(mdl, ".mdl", "");
+		*/
+		local mdl = split(modelName, "/");
+		mdl = Left4Utils.StringReplace(mdl[mdl.len()-1], ".mdl", "");
+		
 		if (mdl in Left4Utils.CarriableWeaponModels)
 			return Left4Utils.CarriableWeaponModels[mdl];
 		else
 			return Left4Utils.CarriableWeaponModels.none;
 	}
 
+	/*
 	::Left4Utils.GetMeleeIdByModel <- function (modelName)
 	{
 		local mdl = Left4Utils.StringReplace(modelName, "models/weapons/melee/", "");
 		mdl = Left4Utils.StringReplace(mdl, "models/w_models/weapons/", "");
 		mdl = Left4Utils.StringReplace(mdl, ".mdl", "");
+		if (mdl in Left4Utils.MeleeWeaponModels)
+			return Left4Utils.MeleeWeaponModels[mdl];
+		else
+			return Left4Utils.MeleeWeaponModels.none;
+	}
+	*/
+	// https://github.com/smilz0/Left4Bots/issues/85
+	::Left4Utils.GetMeleeIdByModel <- function (modelName)
+	{
+		local mdl = split(modelName, "/");
+		mdl = Left4Utils.StringReplace(Left4Utils.StringReplace(mdl[mdl.len()-1], ".mdl", ""), "v_", "w_");
 		if (mdl in Left4Utils.MeleeWeaponModels)
 			return Left4Utils.MeleeWeaponModels[mdl];
 		else
