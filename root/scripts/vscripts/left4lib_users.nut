@@ -41,9 +41,11 @@ if (!("Left4Users" in getroottable()))
 	{
 		Admins = {}
 		OnlineUsers = {}
-		JoiningUsers = {}
-		JustJoinedUsers = {}
+		OnlineBots = {}
+		PrevOnlineUsers = {}
+		PrevOnlineBots = {}
 		Events = {}
+		TerrorPlayerManager = null
 	}
 
 	::Left4Users.LoadUsersFromFile <- function (fileName)
@@ -58,14 +60,14 @@ if (!("Left4Users" in getroottable()))
 		{
 			local values = split(admin, "//");
 			if (values.len() != 2)
-				printl("[Left4Users][WARNING] Invalid admin line: " + admin);
+				::Left4Lib.Logger.Warning("Left4Users.LoadUsersFromFile - Invalid admin line: " + admin);
 			else
 			{
 				local key = values[0];
 				local value = values[1];
 				
 				if (!key || !value)
-					printl("[Left4Users][WARNING] Invalid admin line: " + admin);
+					::Left4Lib.Logger.Warning("Left4Users.LoadUsersFromFile - Invalid admin line: " + admin);
 				else
 				{
 					key = strip(key);
@@ -96,14 +98,14 @@ if (!("Left4Users" in getroottable()))
 		{
 			local values = split(line, "//");
 			if (values.len() != 2)
-				printl("[Left4Users][WARNING] Invalid user line in '" + listFile + "': " + line);
+				::Left4Lib.Logger.Warning("Left4Users.LoadUsersFromFile - Invalid user line in '" + listFile + "': " + line);
 			else
 			{
 				local key = values[0];
 				local value = values[1];
 				
 				if (!key || !value)
-					printl("[Left4Users][WARNING] Invalid user line in '" + listFile + "': " + line);
+					::Left4Lib.Logger.Warning("Left4Users.LoadUsersFromFile - Invalid user line in '" + listFile + "': " + line);
 				else
 				{
 					key = strip(key);
@@ -138,14 +140,14 @@ if (!("Left4Users" in getroottable()))
 		{
 			local values = split(line, "//");
 			if (values.len() != 2)
-				printl("[Left4Users][WARNING] Invalid user line in '" + listFile + "': " + line);
+				::Left4Lib.Logger.Warning("Left4Users.RemoveFromList - Invalid user line in '" + listFile + "': " + line);
 			else
 			{
 				local key = values[0];
 				local value = values[1];
 				
 				if (!key || !value)
-					printl("[Left4Users][WARNING] Invalid user line in '" + listFile + "': " + line);
+					::Left4Lib.Logger.Warning("Left4Users.RemoveFromList - Invalid user line in '" + listFile + "': " + line);
 				else
 				{
 					key = strip(key);
@@ -165,33 +167,33 @@ if (!("Left4Users" in getroottable()))
 		if (!steamid || steamid == "BOT")
 			return;
 		
-		Left4Users.RemoveUser(player); // Remove him from any list first
+		RemoveUser(player); // Remove him from any list first
 		
 		local levelout = L4U_LEVEL.User;
 		if (level == "a")
 		{
-			Left4Users.Admins[steamid] <- player.GetPlayerName();
-			Left4Users.SaveAdminsToFile(Left4Lib.Settings.users_file_admins, Left4Users.Admins);
+			Admins[steamid] <- player.GetPlayerName();
+			SaveAdminsToFile(Left4Lib.Settings.users_file_admins, Admins);
 			
 			levelout = L4U_LEVEL.Admin;
 		}
 		else if (level == "f")
 		{
-			Left4Users.AddToList(steamid, player.GetPlayerName(), Left4Lib.Settings.users_file_friends);
+			AddToList(steamid, player.GetPlayerName(), Left4Lib.Settings.users_file_friends);
 			
 			levelout = L4U_LEVEL.Friend;
 		}
 		else if (level == "g")
 		{
-			Left4Users.AddToList(steamid, player.GetPlayerName(), Left4Lib.Settings.users_file_griefers);
+			AddToList(steamid, player.GetPlayerName(), Left4Lib.Settings.users_file_griefers);
 			
 			levelout = L4U_LEVEL.Griefer;
 		}
 		
 		// Update his online users level
 		local userid = player.GetPlayerUserId();
-		if (userid in ::Left4Users.OnlineUsers)
-			Left4Users.OnlineUsers[userid] <- levelout;
+		if (userid in OnlineUsers)
+			OnlineUsers[userid].level = levelout;
 	}
 	
 	::Left4Users.RemoveUser <- function (player)
@@ -201,31 +203,31 @@ if (!("Left4Users" in getroottable()))
 			return;
 		
 		local userid = player.GetPlayerUserId();
-		if (!(userid in ::Left4Users.OnlineUsers) || Left4Users.OnlineUsers[userid] == L4U_LEVEL.User)
+		if (!(userid in OnlineUsers) || OnlineUsers[userid].level == L4U_LEVEL.User)
 			return; // No need to remove
 		
 		// Turn him into a normal user
-		Left4Users.OnlineUsers[userid] <- L4U_LEVEL.User;
+		OnlineUsers[userid].level = L4U_LEVEL.User;
 		
 		// Remove him from any list
-		if (steamid in ::Left4Users.Admins)
+		if (steamid in Admins)
 		{
-			delete ::Left4Users.Admins[steamid];
-			Left4Users.SaveAdminsToFile(Left4Lib.Settings.users_file_admins, Left4Users.Admins);
+			delete Admins[steamid];
+			SaveAdminsToFile(Left4Lib.Settings.users_file_admins, Admins);
 		}
-		Left4Users.RemoveFromList(steamid, Left4Lib.Settings.users_file_friends);
-		Left4Users.RemoveFromList(steamid, Left4Lib.Settings.users_file_griefers);
+		RemoveFromList(steamid, Left4Lib.Settings.users_file_friends);
+		RemoveFromList(steamid, Left4Lib.Settings.users_file_griefers);
 	}
 
 	::Left4Users.GetSteamIDUserLevel <- function (steamid)
 	{
 		if (!steamid)
 			return L4U_LEVEL.User;
-		else if (steamid in ::Left4Users.Admins)
+		else if (steamid in Admins)
 			return L4U_LEVEL.Admin;
-		else if (Left4Users.IsInList(steamid, Left4Lib.Settings.users_file_friends))
+		else if (IsInList(steamid, Left4Lib.Settings.users_file_friends))
 			return L4U_LEVEL.Friend;
-		else if (Left4Users.IsInList(steamid, Left4Lib.Settings.users_file_griefers))
+		else if (IsInList(steamid, Left4Lib.Settings.users_file_griefers))
 			return L4U_LEVEL.Griefer;
 		else
 			return L4U_LEVEL.User;
@@ -246,77 +248,104 @@ if (!("Left4Users" in getroottable()))
 		local host = GetListenServerHost();
 		if (host && host == player)
 		{
-			if (!(steamid in ::Left4Users.Admins))
+			if (!(steamid in Admins))
 			{
 				// player is the host but wasn't added to the admins list yet. Add now
 				
 				// But remove him from any other list first
-				Left4Users.RemoveFromList(steamid, Left4Lib.Settings.users_file_friends);
-				Left4Users.RemoveFromList(steamid, Left4Lib.Settings.users_file_griefers);
+				RemoveFromList(steamid, Left4Lib.Settings.users_file_friends);
+				RemoveFromList(steamid, Left4Lib.Settings.users_file_griefers);
 				
-				Left4Users.Admins[steamid] <- player.GetPlayerName();
-				Left4Users.SaveAdminsToFile(Left4Lib.Settings.users_file_admins, Left4Users.Admins);
+				Admins[steamid] <- player.GetPlayerName();
+				SaveAdminsToFile(Left4Lib.Settings.users_file_admins, Admins);
 				
-				printl("[Left4Users][INFO] Local host " + player.GetPlayerName() + " has been added to the admins list");
+				::Left4Lib.Logger.Info("Local host " + player.GetPlayerName() + " has been added to the admins list");
 			}
 			return L4U_LEVEL.Admin;
 		}
 		
-		return Left4Users.GetSteamIDUserLevel(steamid);
+		return GetSteamIDUserLevel(steamid);
 	}
 
 	::Left4Users.GetOnlineUserLevel <- function (userid)
 	{
-		if (userid in ::Left4Users.OnlineUsers)
-			return Left4Users.OnlineUsers[userid];
+		if (userid in OnlineUsers)
+			return OnlineUsers[userid].level;
 		else
 			return L4U_LEVEL.User;
 	}
 
-	::Left4Users.PlayerIn <- function (player, isJoin = false)
+	::Left4Users.PlayerJoined <- function (player)
 	{
-		local level = Left4Users.GetUserLevel(player);
+		//::Left4Lib.Logger.Debug("Left4Users.PlayerJoined - player: " + player.GetPlayerName());
 		
-		//printl("[Left4Users][DEBUG] PlayerIn - player: " + player.GetPlayerName() + " - level: " + level);
+		local userid = player.GetPlayerUserId();
+		local steamid = player.GetNetworkIDString();
+		local index = player.GetEntityIndex();
+		local level = GetUserLevel(player);
+		local tm = Director.GetTotalElapsedMissionTime();
+		local joined = false;
 		
-		Left4Users.OnlineUsers[player.GetPlayerUserId()] <- level;
-		
-		if (isJoin)
+		if ((userid in OnlineUsers) && OnlineUsers[userid].conntime <= tm)
 		{
-			printl("[Left4Users][INFO] Player joined: " + player.GetPlayerName());
+			// It's an already connected player
+			::Left4Lib.Logger.Debug("Left4Users.PlayerJoined - " + player.GetPlayerName() + " is an already connected player");
 			
-			if (Left4Lib.Settings.users_admin_notice)
+			if (!OnlineUsers[userid].connfull)
 			{
-				if (level == L4U_LEVEL.Admin)
-					Left4Users.AdminNotice("\x03" + "Admin " + player.GetPlayerName() + " joined");
-				else if (level == L4U_LEVEL.Friend)
-					Left4Users.AdminNotice("\x05" + "Friend " + player.GetPlayerName() + " joined");
-				else if (level == L4U_LEVEL.Griefer)
-					Left4Users.AdminNotice("\x04" + "Griefer " + player.GetPlayerName() + " joined");
-				else
-					Left4Users.AdminNotice("\x01" + "User " + player.GetPlayerName() + " joined");
+				// Player went from connected to joined
+				::Left4Lib.Logger.Debug("Left4Users.PlayerJoined - " + player.GetPlayerName() + " went from connected to joined");
+				
+				OnlineUsers[userid].connfull = 1;
+				joined = true;
 			}
+		}
+		else
+		{
+			if (steamid in PrevOnlineUsers)
+			{
+				// It's an already connected player from previous round
+				::Left4Lib.Logger.Debug("Left4Users.PlayerJoined - " + player.GetPlayerName() + " is an already connected player from previous round");
+				
+				OnlineUsers[userid] <- { steamid = steamid, index = index, level = level, conntime = PrevOnlineUsers[steamid].conntime, connfull = 1, firstround = 0 };
+			}
+			else
+			{
+				// It's a new player (likely a missing connected event)
+				::Left4Lib.Logger.Debug("Left4Users.PlayerJoined - " + player.GetPlayerName() + " is a new player");
+				
+				OnlineUsers[userid] <- { steamid = steamid, index = index, level = level, conntime = tm, connfull = 1, firstround = 1 };
+				joined = true;
+			}
+		}
+		
+		if (joined)
+		{
+			::Left4Lib.Logger.Info("Player joined: " + player.GetPlayerName());
+			
+			//::Left4Users.SaveTempOnlineUsers();
+		
+			if (level == L4U_LEVEL.Admin)
+				AdminNotice("\x03" + "Admin " + player.GetPlayerName() + " joined");
+			else if (level == L4U_LEVEL.Friend)
+				AdminNotice("\x05" + "Friend " + player.GetPlayerName() + " joined");
+			else if (level == L4U_LEVEL.Griefer)
+				AdminNotice("\x04" + "Griefer " + player.GetPlayerName() + " joined");
+			else
+				AdminNotice("\x01" + "User " + player.GetPlayerName() + " joined");
+			
+			::Left4Users.HandleMaxHumanPlayers();
 		}
 	}
 
-	::Left4Users.PlayerOut <- function (userid, player)
-	{
-		//if (player &&  player.IsValid())
-		//	printl("[Left4Users][DEBUG] PlayerOut - player: " + player.GetPlayerName() + " - userid: " + userid);
-		//else
-		//	printl("[Left4Users][DEBUG] PlayerOut - userid: " + userid);
-		
-		if (userid in ::Left4Users.OnlineUsers)
-			delete ::Left4Users.OnlineUsers[userid];
-	}
-	
 	::Left4Users.AdminNotice <- function (msg)
 	{
-		// TODO: settings
+		if (!Left4Lib.Settings.users_admin_notice)
+			return;
 		
-		foreach (userid, level in ::Left4Users.OnlineUsers)
+		foreach (userid, usr in OnlineUsers)
 		{
-			if (level == L4U_LEVEL.Admin)
+			if (usr.connfull && usr.level == L4U_LEVEL.Admin)
 			{
 				local p = g_MapScript.GetPlayerFromUserID(userid);
 				if (p)
@@ -327,7 +356,99 @@ if (!("Left4Users" in getroottable()))
 	
 	::Left4Users.IsJustJoined <- function (userid)
 	{
-		return (userid in ::Left4Users.JustJoinedUsers);
+		return ((userid in OnlineUsers) && OnlineUsers[userid].firstround);
+	}
+	
+	::Left4Users.SaveTempOnlineUsers <- function ()
+	{
+		local t = {};
+		foreach (userid, usr in OnlineUsers)
+			t[usr.steamid] <- { conntime = usr.conntime };
+		
+		SaveTable("Left4Users_OnlineUsers", t);
+		
+		::Left4Lib.Logger.Debug("Left4Users.SaveTempOnlineUsers - Temp OnlineUsers saved:");
+		//::Left4Utils.PrintTable(::Left4Users.OnlineUsers);
+	}
+	
+	::Left4Users.RestoreTempOnlineUsers <- function (tblOut)
+	{
+		local t = {};
+		RestoreTable("Left4Users_OnlineUsers", t);
+		
+		tblOut.clear();
+		foreach (steamid, oldusr in t)
+			tblOut[steamid] <- { conntime = oldusr.conntime.tointeger() };
+		
+		::Left4Lib.Logger.Debug("Left4Users.RestoreTempOnlineUsers - Temp OnlineUsers restored:");
+		//::Left4Utils.PrintTable(tblOut);
+	}
+	
+	::Left4Users.HandleMaxHumanPlayers <- function (connectingID = null, connectingLevel = -1)
+	{
+		// No one to kick in single player mode
+		if (Director.IsSinglePlayerGame())
+			return null;
+		
+		local n = OnlineUsers.len() + (connectingID != null).tointeger();
+		if (::Left4Lib.Settings.users_max_human_players < 0 || n <= ::Left4Lib.Settings.users_max_human_players)
+		{
+			// Limit not exceeded yet, no one to kick
+			::Left4Lib.Logger.Debug("Left4Users.HandleMaxHumanPlayers - No one to kick");
+			return null;
+		}
+		
+		// Limit exceeded, someone has to be kicked. Let's find the one with the lowest priority
+		
+		local hostID = null;
+		local hostPlayer = GetListenServerHost();
+		if (hostPlayer && hostPlayer.IsValid())
+			hostID = hostPlayer.GetNetworkIDString();
+		
+		local kickid = null;
+		local kicklevel = -1;
+		local kickconntime = Director.GetTotalElapsedMissionTime();
+		
+		if (connectingID && connectingID != hostID)
+		{
+			// Let's start from the connecting player (if any and he is not the host)
+			kickid = connectingID;
+			kicklevel = connectingLevel;
+		}
+		
+		::Left4Lib.Logger.Debug("Left4Users.HandleMaxHumanPlayers - Search start: kickid: " + kickid + " - kicklevel: " + kicklevel + " - kickconntime: " + kickconntime);
+		
+		foreach (userid, usr in OnlineUsers)
+		{
+			if (usr.steamid != hostID && (!kickid || usr.level < kicklevel || (usr.level == kicklevel && usr.conntime > kickconntime)))
+			{
+				kickid = usr.steamid;
+				kicklevel = usr.level;
+				kickconntime = usr.conntime;
+				
+				::Left4Lib.Logger.Debug("Left4Users.HandleMaxHumanPlayers - Search swap: kickid: " + kickid + " - kicklevel: " + kicklevel + " - kickconntime: " + kickconntime);
+			}
+		}
+		
+		::Left4Lib.Logger.Debug("Left4Users.HandleMaxHumanPlayers - Search end: kickid: " + kickid + " - kicklevel: " + kicklevel + " - kickconntime: " + kickconntime);
+		
+		if (!kickid)
+		{
+			::Left4Lib.Logger.Debug("Left4Users.HandleMaxHumanPlayers - No kick candidate found");
+			return null;
+		}
+		
+		// If we are checking against a connecting player and the one to kick is a previously connected one, don't kick anyone for now, wait until this one is fully connected
+		if (connectingID && kickid != connectingID)
+		{
+			::Left4Lib.Logger.Debug("Left4Users.HandleMaxHumanPlayers - Kick delayed");
+			return null;
+		}
+		
+		SendToServerConsole("kickid " + kickid + " " + Left4Lib.Settings.users_full_kick_reason);
+		::Left4Lib.Logger.Info("Player with steam ID " + kickid + " kicked with reason: " + Left4Lib.Settings.users_full_kick_reason);
+		
+		return kickid;
 	}
 	
 	::Left4Users.InterceptChat <- function (msg, speaker)
@@ -341,8 +462,6 @@ if (!("Left4Users" in getroottable()))
 		if (msg.find("\n", msg.len() - 1) != null || msg.find("\r", msg.len() - 1) != null)
 			msg = msg.slice(0, msg.len() - 1);
 		
-		//printl("[Left4Users][DEBUG] InterceptChat - speaker: " + speaker.GetPlayerName() + " - msg: " + msg);
-		
 		local name = speaker.GetPlayerName() + ": ";
 		local text = strip(msg.slice(msg.find(name) + name.len())); // Remove the speaker's name part from the message
 		local args = {};
@@ -355,9 +474,9 @@ if (!("Left4Users" in getroottable()))
 		if (args[0].tolower() != "!l4u")
 			return; // Not a L4U command
 		
-		if (Left4Users.GetOnlineUserLevel(speaker.GetPlayerUserId()) < L4U_LEVEL.Admin)
+		if (GetOnlineUserLevel(speaker.GetPlayerUserId()) < L4U_LEVEL.Admin)
 		{
-			printl("[Left4Users][INFO] Non admin " + speaker.GetPlayerName() + " tried to use a L4U command: " + text);
+			::Left4Lib.Logger.Info("Non admin " + speaker.GetPlayerName() + " tried to use a L4U command: " + text);
 			return true;
 		}
 		
@@ -371,7 +490,7 @@ if (!("Left4Users" in getroottable()))
 		if (args.len() > 3)
 			arg2 = strip(args[3].tolower());
 		
-		local isCommand = Left4Users.OnAdminCommand(speaker, cmd, arg1, arg2);
+		local isCommand = OnAdminCommand(speaker, cmd, arg1, arg2);
 		if (isCommand /*&& Left4Lib.Settings.hide_chat_commands*/)
 			return false;
 		else
@@ -390,9 +509,9 @@ if (!("Left4Users" in getroottable()))
 		if (args[0].tolower() != "l4u")
 			return; // Not a L4U command
 		
-		if (Left4Users.GetOnlineUserLevel(playerScript.GetPlayerUserId()) < L4U_LEVEL.Admin)
+		if (GetOnlineUserLevel(playerScript.GetPlayerUserId()) < L4U_LEVEL.Admin)
 		{
-			printl("[Left4Users][INFO] Non admin " + playerScript.GetPlayerName() + " tried to use a L4U command: " + arg);
+			::Left4Lib.Logger.Info("Non admin " + playerScript.GetPlayerName() + " tried to use a L4U command: " + arg);
 			return;
 		}
 		
@@ -406,13 +525,11 @@ if (!("Left4Users" in getroottable()))
 		if (args.len() > 3)
 			arg2 = strip(args[3].tolower());
 		
-		Left4Users.OnAdminCommand(playerScript, cmd, arg1, arg2);
+		OnAdminCommand(playerScript, cmd, arg1, arg2);
 	}
 	
 	::Left4Users.OnAdminCommand <- function (player, cmd, arg1, arg2)
 	{
-		//printl("[Left4Users][DEBUG] OnAdminCommand - player: " + player.GetPlayerName() + " - cmd: " + cmd + " - arg1: " + arg1 + " - arg2: " + arg2);
-		
 		local target = null;
 		if (arg1)
 		{
@@ -455,10 +572,10 @@ if (!("Left4Users" in getroottable()))
 					ClientPrint(player, 3, "\x04" + "Invalid level (usage: !l4u add [target] [admin/friend/griefer])");
 				else
 				{
-					Left4Users.AddUser(target, level);
+					AddUser(target, level);
 					ClientPrint(player, 3, "\x05" + target.GetPlayerName() + " added to the " + list + " list");
 					
-					printl("[Left4Users][INFO] " + player.GetPlayerName() + " added " + target.GetPlayerName() + " to the " + list + " list");
+					::Left4Lib.Logger.Info(player.GetPlayerName() + " added " + target.GetPlayerName() + " to the " + list + " list");
 				}
 				
 				return true;
@@ -469,10 +586,10 @@ if (!("Left4Users" in getroottable()))
 					ClientPrint(player, 3, "\x04" + "Invalid target (usage: !l4u remove [target])");
 				else
 				{
-					Left4Users.RemoveUser(target);
+					RemoveUser(target);
 					ClientPrint(player, 3, "\x05" + target.GetPlayerName() + " removed from all lists");
 					
-					printl("[Left4Users][INFO] " + player.GetPlayerName() + " removed " + target.GetPlayerName());
+					::Left4Lib.Logger.Info(player.GetPlayerName() + " removed " + target.GetPlayerName());
 				}
 				
 				return true;
@@ -480,17 +597,17 @@ if (!("Left4Users" in getroottable()))
 			case "online":
 			{
 				local t = "";
-				foreach (userid, level in ::Left4Users.OnlineUsers)
+				foreach (userid, usr in OnlineUsers)
 				{
 					local p = g_MapScript.GetPlayerFromUserID(userid);
 					if (p)
 					{
 						local l = "U";
-						if (level == L4U_LEVEL.Admin)
+						if (usr.level == L4U_LEVEL.Admin)
 							l = "A";
-						else if (level == L4U_LEVEL.Friend)
+						else if (usr.level == L4U_LEVEL.Friend)
 							l = "F";
-						else if (level == L4U_LEVEL.Griefer)
+						else if (usr.level == L4U_LEVEL.Griefer)
 							l = "G";
 						
 						if (t == "")
@@ -515,145 +632,169 @@ if (!("Left4Users" in getroottable()))
 	
 	::Left4Users.Events.OnGameEvent_round_start <- function (params)
 	{
-		//printl("[Left4Users][DEBUG] OnGameEvent_round_start");
-		
 		// Admins aren't supposed to be that many, so we can keep them in memory
-		Left4Users.Admins = Left4Users.LoadUsersFromFile(Left4Lib.Settings.users_file_admins);
+		::Left4Users.Admins = ::Left4Users.LoadUsersFromFile(Left4Lib.Settings.users_file_admins);
 		
-		::HooksHub.SetUserConsoleCommand("Left4Users", ::Left4Users.UserConsoleCommand);
-		::HooksHub.SetInterceptChat("Left4Users", ::Left4Users.InterceptChat);
+		::HooksHub.SetUserConsoleCommand("Left4Users", ::Left4Users.UserConsoleCommand.bindenv(::Left4Users));
+		::HooksHub.SetInterceptChat("Left4Users", ::Left4Users.InterceptChat.bindenv(::Left4Users));
+
+		::Left4Users.RestoreTempOnlineUsers(::Left4Users.PrevOnlineUsers);
+		
+		::Left4Users.PrevOnlineBots.clear();
+		RestoreTable("Left4Users_OnlineBots", ::Left4Users.PrevOnlineBots);
+		::Left4Lib.Logger.Debug("OnGameEvent_round_start - Temp OnlineBots restored:");
+		//::Left4Utils.PrintTable(::Left4Users.PrevOnlineBots);
 
 		foreach (player in ::Left4Utils.GetHumanPlayers())
-			Left4Users.PlayerIn(player);
+			::Left4Users.PlayerJoined(player);
 	}
 
 	::Left4Users.Events.OnGameEvent_player_connect <- function (params)
 	{
-		if ("userid" in params)
+		if (!("userid" in params))
+			return;
+		
+		local userid = params["userid"];
+		//local player = g_MapScript.GetPlayerFromUserID(userid); // player's entity hasn't been created yet
+		local name = null;
+		local index = null;
+		local address = null;
+		local steamid = null;
+		local xuid = null;
+		local bot = null;
+		
+		if ("name" in params)
+			name = params["name"];
+		if ("index" in params)
+			index = params["index"];
+		if ("address" in params)
+			address = params["address"];
+		if ("networkid" in params)
+			steamid = params["networkid"];
+		if ("xuid" in params)
+			xuid = params["xuid"];
+		if ("bot" in params)
+			bot = params["bot"];
+		
+		if (bot || steamid == "BOT")
 		{
-			local userid = params["userid"];
-			//local player = g_MapScript.GetPlayerFromUserID(userid); // player's entity hasn't been created yet
-			local name = null;
-			local index = null;
-			local address = null;
-			local steamid = null;
-			local xuid = null;
-			local bot = null;
+			::Left4Lib.Logger.Debug("Bot connected: " + name + " - userid: " + userid + " - index: " + index + " - address: " + address + " - steamid: " + steamid + " - xuid: " + xuid + " - bot: " + bot);
 			
-			if ("name" in params)
-				name = params["name"];
-			if ("index" in params)
-				index = params["index"];
-			if ("address" in params)
-				address = params["address"];
-			if ("networkid" in params)
-				steamid = params["networkid"];
-			if ("xuid" in params)
-				xuid = params["xuid"];
-			if ("bot" in params)
-				bot = params["bot"];
+			local botid = "BOT_" + (index + 1).tostring();
+			if (botid in ::Left4Users.OnlineBots)
+				::Left4Lib.Logger.Debug("Connected bot " + name + " (" + botid + ") was already in OnlineBots");
+			
+			::Left4Users.OnlineBots[botid] <- { userid = userid, name = name, index = (index + 1) };
+			
+			::Left4Lib.Logger.Debug("OnlineBots[" + botid + "]: userid = " + userid + " - name = " + ::Left4Users.OnlineBots[botid].name + " - index = " + ::Left4Users.OnlineBots[botid].index);
+			::Left4Lib.Logger.Debug("OnlineBots.len() = " + ::Left4Users.OnlineBots.len());
+			
+			return;
+		}
 
-			if (!bot && steamid != "BOT")
-			{
-				local level = Left4Users.GetSteamIDUserLevel(steamid);
-				
-				printl("[Left4Users][INFO] Player connected: " + name + " - userid: " + userid + " - index: " + index + " - address: " + address + " - steamid: " + steamid + " - xuid: " + xuid + " - bot: " + bot + " - level: " + level);
+		local level = ::Left4Users.GetSteamIDUserLevel(steamid);
+		
+		::Left4Lib.Logger.Info("Player connected: " + name + " - userid: " + userid + " - index: " + index + " - address: " + address + " - steamid: " + steamid + " - xuid: " + xuid + " - bot: " + bot + " - level: " + level);
 
-				if (Left4Lib.Settings.users_max_human_players >= 0 && (Left4Users.OnlineUsers.len() + Left4Users.JoiningUsers.len()) >= Left4Lib.Settings.users_max_human_players)
-				{
-					SendToServerConsole("kickid " + steamid + " " + Left4Lib.Settings.users_full_kick_reason);
-					
-					printl("[Left4Users][INFO] Player kicked with reason: " + Left4Lib.Settings.users_full_kick_reason);
-				}
-				else
-				{
-					::Left4Users.JoiningUsers[userid] <- 0;
-
-					if (name && Left4Lib.Settings.users_admin_notice)
-					{
-						if (level == L4U_LEVEL.Admin)
-							Left4Users.AdminNotice("\x03" + "Admin " + name + " connected");
-						else if (level == L4U_LEVEL.Friend)
-							Left4Users.AdminNotice("\x05" + "Friend " + name + " connected");
-						else if (level == L4U_LEVEL.Griefer)
-							Left4Users.AdminNotice("\x04" + "Griefer " + name + " connected");
-						else
-							Left4Users.AdminNotice("\x01" + "User " + name + " connected");
-					}
-				}
-			}
+		local kickedid = ::Left4Users.HandleMaxHumanPlayers(steamid, level);
+		if (kickedid == steamid)
+			return; // This connecting player was kicked
+		
+		::Left4Users.OnlineUsers[userid] <- { steamid = steamid, index = (index + 1), level = level, conntime = Director.GetTotalElapsedMissionTime(), connfull = 0, firstround = 1 };
+		
+		//::Left4Users.SaveTempOnlineUsers();
+		
+		if (name)
+		{
+			if (level == L4U_LEVEL.Admin)
+				::Left4Users.AdminNotice("\x03" + "Admin " + name + " connected");
+			else if (level == L4U_LEVEL.Friend)
+				::Left4Users.AdminNotice("\x05" + "Friend " + name + " connected");
+			else if (level == L4U_LEVEL.Griefer)
+				::Left4Users.AdminNotice("\x04" + "Griefer " + name + " connected");
+			else
+				::Left4Users.AdminNotice("\x01" + "User " + name + " connected");
 		}
 	}
 
 	::Left4Users.Events.OnGameEvent_player_connect_full <- function (params)
 	{
-		if ("userid" in params)
-		{
-			local userid = params["userid"];
-			local player = g_MapScript.GetPlayerFromUserID(userid);
+		if (!("userid" in params))
+			return;
 
-			local isjoining = (userid in ::Left4Users.JoiningUsers);
-			if (isjoining)
-			{
-				::Left4Users.JustJoinedUsers[userid] <- 0;
-				
-				delete ::Left4Users.JoiningUsers[userid];
-			}
-
-			if (player && player.IsValid() && !IsPlayerABot(player))
-				Left4Users.PlayerIn(player, isjoining);
-		}
+		local player = g_MapScript.GetPlayerFromUserID(params["userid"]);
+		
+		::Left4Lib.Logger.Debug("Left4Users.Events.OnGameEvent_player_connect_full - player: " + player);
+		
+		if (player && player.IsValid() && !IsPlayerABot(player))
+			::Left4Users.PlayerJoined(player);
 	}
 
 	::Left4Users.Events.OnGameEvent_player_spawn <- function (params)
 	{
-		if ("userid" in params)
-		{
-			local player = g_MapScript.GetPlayerFromUserID(params["userid"]);
+		if (!("userid" in params))
+			return;
 		
-			//printl("[Left4Users][DEBUG] OnGameEvent_player_spawn - player: " + player.GetPlayerName());
+		local player = g_MapScript.GetPlayerFromUserID(params["userid"]);
 		
-			if (player && player.IsValid() && !IsPlayerABot(player))
-				Left4Users.PlayerIn(player);
-		}
+		::Left4Lib.Logger.Debug("Left4Users.Events.OnGameEvent_player_spawn - player: " + player);
+		
+		if (player && player.IsValid() && !IsPlayerABot(player))
+			::Left4Users.PlayerJoined(player);
 	}
 
 	::Left4Users.Events.OnGameEvent_bot_player_replace <- function (params)
 	{
 		local player = g_MapScript.GetPlayerFromUserID(params["player"]);
 		
-		//printl("[Left4Users][DEBUG] OnGameEvent_bot_player_replace - player: " + player.GetPlayerName());
+		::Left4Lib.Logger.Debug("Left4Users.Events.OnGameEvent_bot_player_replace - player: " + player);
 		
 		if (player && player.IsValid() && !IsPlayerABot(player))
-			Left4Users.PlayerIn(player);
+			::Left4Users.PlayerJoined(player);
 	}
 
 	::Left4Users.Events.OnGameEvent_player_disconnect <- function (params)
 	{
-		if ("userid" in params)
+		if (!("userid" in params))
+			return;
+		
+		local userid = params["userid"];
+		local player = g_MapScript.GetPlayerFromUserID(userid);
+
+		if (player && player.IsValid() && IsPlayerABot(player))
 		{
-			local userid = params["userid"];
-			local player = g_MapScript.GetPlayerFromUserID(userid);
-
-			if (userid in ::Left4Users.JoiningUsers)
-				delete ::Left4Users.JoiningUsers[userid];
-
-			if (userid in ::Left4Users.JustJoinedUsers)
-				delete ::Left4Users.JustJoinedUsers[userid];
-
-			if (player && player.IsValid() && IsPlayerABot(player))
-				return;
-
-			if (player && player.IsValid())
-				printl("[Left4Users][INFO] Player disconnected: " + player.GetPlayerName());
-
-			Left4Users.PlayerOut(userid, player);
+			::Left4Lib.Logger.Debug("Bot disconnected: " + player.GetPlayerName() + " - " + player.GetEntityIndex());
+			
+			local botid = player.GetEntityIndex();
+			if (botid in ::Left4Users.OnlineBots)
+				delete ::Left4Users.OnlineBots[botid];
+			if (botid in ::Left4Users.PrevOnlineBots)
+				delete ::Left4Users.PrevOnlineBots[botid];
+			
+			::Left4Lib.Logger.Debug("OnlineBots[" + botid + "] removed");
+			::Left4Lib.Logger.Debug("OnlineBots.len() = " + ::Left4Users.OnlineBots.len());
+			
+			return;
 		}
+
+		if (player && player.IsValid())
+			::Left4Lib.Logger.Info("Player disconnected: " + player.GetPlayerName());
+
+		if (userid in ::Left4Users.OnlineUsers)
+			delete ::Left4Users.OnlineUsers[userid];
+		else
+			::Left4Lib.Logger.Warning("Left4Users - Disconnected was not in OnlineUsers!");
+		
+		//::Left4Users.SaveTempOnlineUsers();
 	}
 
 	::Left4Users.Events.OnGameEvent_round_end <- function (params)
 	{
-		//printl("[Left4Users][DEBUG] OnGameEvent_round_end");
+		::Left4Users.SaveTempOnlineUsers();
+		
+		SaveTable("Left4Users_OnlineBots", ::Left4Users.OnlineBots);
+		::Left4Lib.Logger.Debug("OnGameEvent_round_end - Temp OnlineBots saved:");
+		//::Left4Utils.PrintTable(::Left4Users.OnlineBots);
 		
 		::HooksHub.RemoveUserConsoleCommand("Left4Users");
 		::HooksHub.RemoveInterceptChat("Left4Users");
@@ -661,10 +802,24 @@ if (!("Left4Users" in getroottable()))
 
 	::Left4Users.Events.OnGameEvent_map_transition <- function (params)
 	{
-		//printl("[Left4Users][DEBUG] OnGameEvent_map_transition");
+		::Left4Users.SaveTempOnlineUsers();
+		
+		SaveTable("Left4Users_OnlineBots", ::Left4Users.OnlineBots);
+		::Left4Lib.Logger.Debug("OnGameEvent_map_transition - Temp OnlineBots saved:");
+		//::Left4Utils.PrintTable(::Left4Users.OnlineBots);
 		
 		::HooksHub.RemoveUserConsoleCommand("Left4Users");
 		::HooksHub.RemoveInterceptChat("Left4Users");
+		
+		local ent = null;
+		while (ent = Entities.FindByClassname(ent, "info_transitioning_player"))
+		{
+			local m_loadingProgress = NetProps.GetPropInt(ent, "m_loadingProgress");
+			local m_userID = NetProps.GetPropInt(ent, "m_userID");
+			local m_playerName = NetProps.GetPropString(ent, "m_playerName");
+			
+			printl("OnGameEvent_map_transition - Transitioning: " + m_playerName + " - " + m_userID + " - " + m_loadingProgress);
+		}
 	}
 }
 

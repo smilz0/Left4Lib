@@ -25,7 +25,7 @@
 		UserConsoleCommand
 		BotQuery
 		CanPickupObject
-	The script replaces any active hook vscriot functions with its own functions and calls the hook functions of the scripts that registered, one after the other, when then main hook is called by C++.
+	The script replaces any active hook vscript functions with its own functions and calls the hook functions of the scripts that registered, one after the other, when then main hook is called by C++.
 	
 	You register/unregister your hooks to HooksHub with:
 		HooksHub.SetInterceptChat(key, func);
@@ -305,28 +305,28 @@ if (!("HooksHub" in getroottable()))
 	::HooksHub.DbgPrintFuncs <- function ()
 	{
 		foreach (key, val in ::HooksHub.InterceptChatFuncs)
-			printl("[HooksHub][DEBUG] InterceptChatFuncs[" + key + "] = " + val);
+			::Left4Lib.Logger.Debug("HooksHub.DbgPrintFuncs - InterceptChatFuncs[" + key + "] = " + val);
 			
 		foreach (key, val in ::HooksHub.AllowTakeDamageFuncs)
-			printl("[HooksHub][DEBUG] AllowTakeDamageFuncs[" + key + "] = " + val);
+			::Left4Lib.Logger.Debug("HooksHub.DbgPrintFuncs - AllowTakeDamageFuncs[" + key + "] = " + val);
 			
 		foreach (key, val in ::HooksHub.AllowBashFuncs)
-			printl("[HooksHub][DEBUG] AllowBashFuncs[" + key + "] = " + val);
+			::Left4Lib.Logger.Debug("HooksHub.DbgPrintFuncs - AllowBashFuncs[" + key + "] = " + val);
 			
 		foreach (key, val in ::HooksHub.UserConsoleCommandFuncs)
-			printl("[HooksHub][DEBUG] UserConsoleCommandFuncs[" + key + "] = " + val);
+			::Left4Lib.Logger.Debug("HooksHub.DbgPrintFuncs - UserConsoleCommandFuncs[" + key + "] = " + val);
 			
 		foreach (key, val in ::HooksHub.BotQueryFuncs)
-			printl("[HooksHub][DEBUG] BotQueryFuncs[" + key + "] = " + val);
+			::Left4Lib.Logger.Debug("HooksHub.DbgPrintFuncs - BotQueryFuncs[" + key + "] = " + val);
 			
 		foreach (key, val in ::HooksHub.CanPickupObjectFuncs)
-			printl("[HooksHub][DEBUG] CanPickupObjectFuncs[" + key + "] = " + val);
+			::Left4Lib.Logger.Debug("HooksHub.DbgPrintFuncs - CanPickupObjectFuncs[" + key + "] = " + val);
 		
 		foreach (key, val in ::HooksHub.ChatCommandHandlers)
-			printl("[HooksHub][DEBUG] ChatCommandHandlers[" + key + "] = " + val);
+			::Left4Lib.Logger.Debug("HooksHub.DbgPrintFuncs - ChatCommandHandlers[" + key + "] = " + val);
 			
 		foreach (key, val in ::HooksHub.ConsoleCommandHandlers)
-			printl("[HooksHub][DEBUG] ConsoleCommandHandlers[" + key + "] = " + val);
+			::Left4Lib.Logger.Debug("HooksHub.DbgPrintFuncs - ConsoleCommandHandlers[" + key + "] = " + val);
 	}
 	
 	::HooksHub.InterceptChat <- function (msg, speaker)
@@ -341,10 +341,8 @@ if (!("HooksHub" in getroottable()))
 			}
 			catch(exception)
 			{
-				error("[HooksHub][ERROR] InterceptChat - Exception in func '" + key + "': " + exception + "\n");
+				::Left4Lib.Logger.Error("HooksHub.InterceptChat - Exception in func '" + key + "': " + exception);
 			}
-
-			//printl("[HooksHub][DEBUG] " + key + "'s InterceptChat func returned " + r);
 
 			// Global return value will be false if at least one func returns false
 			if (r == false)
@@ -362,7 +360,7 @@ if (!("HooksHub" in getroottable()))
 			local name = speaker.GetPlayerName() + ": ";
 			local text = strip(msg.slice(msg.find(name) + name.len())); // Remove the speaker's name part from the message
 			
-			printl("[HooksHub][DEBUG] InterceptChat - speaker: " + speaker.GetPlayerName() + " - text: " + text);
+			::Left4Lib.Logger.Debug("HooksHub.InterceptChat - speaker: " + speaker.GetPlayerName() + " - text: " + text);
 			
 			if (text.find(Left4Lib.Settings.hooks_chatcommand_trigger) == 0)
 			{
@@ -372,7 +370,7 @@ if (!("HooksHub" in getroottable()))
 					local handler = args[0].slice(Left4Lib.Settings.hooks_chatcommand_trigger.len());
 					local command = args[1].tolower();
 					
-					printl("[HooksHub][DEBUG] InterceptChat - handler: " + handler + " - command: " + command);
+					::Left4Lib.Logger.Debug("HooksHub.InterceptChat - handler: " + handler + " - command: " + command);
 					
 					if (handler in ::HooksHub.ChatCommandHandlers)
 					{
@@ -382,7 +380,7 @@ if (!("HooksHub" in getroottable()))
 						}
 						catch(exception)
 						{
-							error("[HooksHub][ERROR] InterceptChat - Exception in ChatCommandHandler '" + key + "': " + exception + "\n");
+							::Left4Lib.Logger.Error("HooksHub.InterceptChat - Exception in ChatCommandHandler '" + key + "': " + exception);
 						}
 					}
 				}
@@ -393,7 +391,7 @@ if (!("HooksHub" in getroottable()))
 			}
 		}
 		
-		printl("[HooksHub][DEBUG] InterceptChat - ret: " + ret);
+		::Left4Lib.Logger.Debug("HooksHub.InterceptChat - ret: " + ret);
 		
 		return ret;
 	}
@@ -411,10 +409,8 @@ if (!("HooksHub" in getroottable()))
 			}
 			catch(exception)
 			{
-				error("[HooksHub][ERROR] AllowTakeDamage - Exception in func '" + key + "': " + exception + "\n");
+				::Left4Lib.Logger.Error("HooksHub.AllowTakeDamage - Exception in func '" + key + "': " + exception);
 			}
-			
-			//printl("[HooksHub][DEBUG] " + key + "'s AllowTakeDamage func returned " + r);
 			
 			// If one of the AllowTakeDamage functions returned false, there's no need to run the others
 			//if (r == false)
@@ -441,10 +437,8 @@ if (!("HooksHub" in getroottable()))
 			}
 			catch(exception)
 			{
-				error("[HooksHub][ERROR] AllowBash - Exception in func '" + key + "': " + exception + "\n");
+				::Left4Lib.Logger.Error("HooksHub.AllowBash - Exception in func '" + key + "': " + exception);
 			}
-			
-			//printl("[HooksHub][DEBUG] " + key + "'s AllowBash func returned " + r);
 			
 			if (r != null && r != ret)
 			{
@@ -462,8 +456,6 @@ if (!("HooksHub" in getroottable()))
 	
 	::HooksHub.UserConsoleCommand <- function (playerScript, arg)
 	{
-		//printl("[HooksHub][DEBUG] UserConsoleCommand - arg: " + arg);
-		
 		foreach (key, func in ::HooksHub.UserConsoleCommandFuncs)
 		{
 			try
@@ -472,7 +464,7 @@ if (!("HooksHub" in getroottable()))
 			}
 			catch(exception)
 			{
-				error("[HooksHub][ERROR] UserConsoleCommand - Exception in func '" + key + "': " + exception + "\n");
+				::Left4Lib.Logger.Error("HooksHub.UserConsoleCommand - Exception in func '" + key + "': " + exception);
 			}
 		}
 		
@@ -486,7 +478,7 @@ if (!("HooksHub" in getroottable()))
 				local handler = args[0];
 				local command = args[1].tolower();
 					
-				printl("[HooksHub][DEBUG] UserConsoleCommand - handler: " + handler + " - command: " + command);
+				::Left4Lib.Logger.Debug("HooksHub.UserConsoleCommand - handler: " + handler + " - command: " + command);
 				
 				if (handler in ::HooksHub.ConsoleCommandHandlers)
 				{
@@ -496,7 +488,7 @@ if (!("HooksHub" in getroottable()))
 					}
 					catch(exception)
 					{
-						error("[HooksHub][ERROR] UserConsoleCommand - Exception in ConsoleCommandHandler '" + key + "': " + exception + "\n");
+						::Left4Lib.Logger.Error("HooksHub.UserConsoleCommand - Exception in ConsoleCommandHandler '" + key + "': " + exception);
 					}
 				}
 			}
@@ -515,10 +507,8 @@ if (!("HooksHub" in getroottable()))
 			}
 			catch(exception)
 			{
-				error("[HooksHub][ERROR] BotQuery - Exception in func '" + key + "': " + exception + "\n");
+				::Left4Lib.Logger.Error("HooksHub.BotQuery - Exception in func '" + key + "': " + exception);
 			}
-
-			//printl("[HooksHub][DEBUG] " + key + "'s BotQuery func returned " + r);
 
 			if (r == false)
 				ret = false;
@@ -541,10 +531,8 @@ if (!("HooksHub" in getroottable()))
 			}
 			catch(exception)
 			{
-				error("[HooksHub][ERROR] CanPickupObject - Exception in func '" + key + "': " + exception + "\n");
+				::Left4Lib.Logger.Error("HooksHub.CanPickupObject - Exception in func '" + key + "': " + exception);
 			}
-
-			//printl("[HooksHub][DEBUG] " + key + "'s CanPickupObject func returned " + r);
 
 			if (r == true)
 				ret = true;
@@ -557,14 +545,14 @@ if (!("HooksHub" in getroottable()))
 	
 	::HooksHub.Init <- function ()
 	{
-		printl("[HooksHub][DEBUG] Init");
+		::Left4Lib.Logger.Debug("HooksHub.Init");
 		
 		// Setting up InterceptChat hooks
 		if ("InterceptChat" in getroottable() && getroottable().InterceptChat != null && getroottable().InterceptChat != HooksHub.InterceptChat)
 		{
 			HooksHub.SetInterceptChat("L4LROOT", getroottable().InterceptChat);
 				
-			printl("[HooksHub][DEBUG] Init - Added previous getroottable() InterceptChat hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added previous getroottable() InterceptChat hook");
 			
 			getroottable().InterceptChat <- ::HooksHub.InterceptChat;
 		}
@@ -572,7 +560,7 @@ if (!("HooksHub" in getroottable()))
 		{
 			HooksHub.SetInterceptChat("L4LMODE", g_ModeScript.InterceptChat);
 				
-			printl("[HooksHub][DEBUG] Init - Added g_ModeScript InterceptChat hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added g_ModeScript InterceptChat hook");
 			
 			g_ModeScript.InterceptChat <- null;
 		}
@@ -580,13 +568,13 @@ if (!("HooksHub" in getroottable()))
 		{
 			HooksHub.SetInterceptChat("L4LMAP", g_MapScript.InterceptChat);
 				
-			printl("[HooksHub][DEBUG] Init - Added g_MapScript InterceptChat hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added g_MapScript InterceptChat hook");
 			
 			g_MapScript.InterceptChat <- null;
 		}
 		if (HooksHub.Loaded)
 		{
-			printl("[HooksHub][DEBUG] Init - Setting HooksHub.InterceptChat hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Setting HooksHub.InterceptChat hook");
 			
 			getroottable().InterceptChat <- ::HooksHub.InterceptChat;
 			g_ModeScript.InterceptChat <- ::HooksHub.InterceptChat;
@@ -597,7 +585,7 @@ if (!("HooksHub" in getroottable()))
 		{
 			HooksHub.SetAllowTakeDamage("L4LROOT", getroottable().AllowTakeDamage);
 				
-			printl("[HooksHub][DEBUG] Init - Added previous getroottable() AllowTakeDamage hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added previous getroottable() AllowTakeDamage hook");
 			
 			getroottable().AllowTakeDamage <- ::HooksHub.AllowTakeDamage;
 		}
@@ -605,7 +593,7 @@ if (!("HooksHub" in getroottable()))
 		{
 			HooksHub.SetAllowTakeDamage("L4LMODE", g_ModeScript.AllowTakeDamage);
 				
-			printl("[HooksHub][DEBUG] Init - Added g_ModeScript AllowTakeDamage hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added g_ModeScript AllowTakeDamage hook");
 			
 			g_ModeScript.AllowTakeDamage <- null;
 		}
@@ -613,13 +601,13 @@ if (!("HooksHub" in getroottable()))
 		{
 			HooksHub.SetAllowTakeDamage("L4LMAP", g_MapScript.AllowTakeDamage);
 				
-			printl("[HooksHub][DEBUG] Init - Added g_MapScript AllowTakeDamage hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added g_MapScript AllowTakeDamage hook");
 			
 			g_MapScript.AllowTakeDamage <- null;
 		}
 		if (HooksHub.Loaded)
 		{
-			printl("[HooksHub][DEBUG] Init - Setting HooksHub.AllowTakeDamage hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Setting HooksHub.AllowTakeDamage hook");
 			
 			getroottable().AllowTakeDamage <- ::HooksHub.AllowTakeDamage;
 			g_ModeScript.AllowTakeDamage <- ::HooksHub.AllowTakeDamage;
@@ -630,7 +618,7 @@ if (!("HooksHub" in getroottable()))
 		{
 			HooksHub.SetAllowBash("L4LROOT", getroottable().AllowBash);
 				
-			printl("[HooksHub][DEBUG] Init - Added previous getroottable() AllowBash hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added previous getroottable() AllowBash hook");
 			
 			getroottable().AllowBash <- ::HooksHub.AllowBash;
 		}
@@ -638,7 +626,7 @@ if (!("HooksHub" in getroottable()))
 		{
 			HooksHub.SetAllowBash("L4LMODE", g_ModeScript.AllowBash);
 				
-			printl("[HooksHub][DEBUG] Init - Added g_ModeScript AllowBash hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added g_ModeScript AllowBash hook");
 			
 			g_ModeScript.AllowBash <- null;
 		}
@@ -646,13 +634,13 @@ if (!("HooksHub" in getroottable()))
 		{
 			HooksHub.SetAllowBash("L4LMAP", g_MapScript.AllowBash);
 				
-			printl("[HooksHub][DEBUG] Init - Added g_MapScript AllowBash hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added g_MapScript AllowBash hook");
 			
 			g_MapScript.AllowBash <- null;
 		}
 		if (HooksHub.Loaded)
 		{
-			printl("[HooksHub][DEBUG] Init - Setting HooksHub.AllowBash hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Setting HooksHub.AllowBash hook");
 			
 			getroottable().AllowBash <- ::HooksHub.AllowBash;
 			g_ModeScript.AllowBash <- ::HooksHub.AllowBash;
@@ -663,7 +651,7 @@ if (!("HooksHub" in getroottable()))
 		{
 			HooksHub.SetUserConsoleCommand("L4LROOT", getroottable().UserConsoleCommand);
 				
-			printl("[HooksHub][DEBUG] Init - Added previous getroottable() UserConsoleCommand hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added previous getroottable() UserConsoleCommand hook");
 			
 			getroottable().UserConsoleCommand <- ::HooksHub.UserConsoleCommand;
 		}
@@ -671,7 +659,7 @@ if (!("HooksHub" in getroottable()))
 		{
 			HooksHub.SetUserConsoleCommand("L4LMODE", g_ModeScript.UserConsoleCommand);
 				
-			printl("[HooksHub][DEBUG] Init - Added g_ModeScript UserConsoleCommand hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added g_ModeScript UserConsoleCommand hook");
 			
 			g_ModeScript.UserConsoleCommand <- null;
 		}
@@ -679,13 +667,13 @@ if (!("HooksHub" in getroottable()))
 		{
 			HooksHub.SetUserConsoleCommand("L4LMAP", g_MapScript.UserConsoleCommand);
 				
-			printl("[HooksHub][DEBUG] Init - Added g_MapScript UserConsoleCommand hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added g_MapScript UserConsoleCommand hook");
 			
 			g_MapScript.UserConsoleCommand <- null;
 		}
 		if (HooksHub.Loaded)
 		{
-			printl("[HooksHub][DEBUG] Init - Setting HooksHub.UserConsoleCommand hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Setting HooksHub.UserConsoleCommand hook");
 			
 			getroottable().UserConsoleCommand <- ::HooksHub.UserConsoleCommand;
 			g_ModeScript.UserConsoleCommand <- ::HooksHub.UserConsoleCommand;
@@ -696,7 +684,7 @@ if (!("HooksHub" in getroottable()))
 		{
 			HooksHub.SetBotQuery("L4LROOT", getroottable().BotQuery);
 				
-			printl("[HooksHub][DEBUG] Init - Added previous getroottable() BotQuery hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added previous getroottable() BotQuery hook");
 			
 			getroottable().BotQuery <- ::HooksHub.BotQuery;
 		}
@@ -704,7 +692,7 @@ if (!("HooksHub" in getroottable()))
 		{
 			HooksHub.SetBotQuery("L4LMODE", g_ModeScript.BotQuery);
 				
-			printl("[HooksHub][DEBUG] Init - Added g_ModeScript BotQuery hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added g_ModeScript BotQuery hook");
 			
 			g_ModeScript.BotQuery <- null;
 		}
@@ -712,13 +700,13 @@ if (!("HooksHub" in getroottable()))
 		{
 			HooksHub.SetBotQuery("L4LMAP", g_MapScript.BotQuery);
 				
-			printl("[HooksHub][DEBUG] Init - Added g_MapScript BotQuery hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added g_MapScript BotQuery hook");
 			
 			g_MapScript.BotQuery <- null;
 		}
 		if (HooksHub.Loaded)
 		{
-			printl("[HooksHub][DEBUG] Init - Setting HooksHub.BotQuery hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Setting HooksHub.BotQuery hook");
 			
 			getroottable().BotQuery <- ::HooksHub.BotQuery;
 			g_ModeScript.BotQuery <- ::HooksHub.BotQuery;
@@ -729,7 +717,7 @@ if (!("HooksHub" in getroottable()))
 		{
 			HooksHub.SetCanPickupObject("L4LROOT", getroottable().CanPickupObject);
 				
-			printl("[HooksHub][DEBUG] Init - Added previous getroottable() CanPickupObject hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added previous getroottable() CanPickupObject hook");
 			
 			getroottable().CanPickupObject <- ::HooksHub.CanPickupObject;
 		}
@@ -737,7 +725,7 @@ if (!("HooksHub" in getroottable()))
 		{
 			HooksHub.SetCanPickupObject("L4LMODE", g_ModeScript.CanPickupObject);
 				
-			printl("[HooksHub][DEBUG] Init - Added g_ModeScript CanPickupObject hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added g_ModeScript CanPickupObject hook");
 			
 			g_ModeScript.CanPickupObject <- null;
 		}
@@ -745,13 +733,13 @@ if (!("HooksHub" in getroottable()))
 		{
 			HooksHub.SetCanPickupObject("L4LMAP", g_MapScript.CanPickupObject);
 				
-			printl("[HooksHub][DEBUG] Init - Added g_MapScript CanPickupObject hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added g_MapScript CanPickupObject hook");
 			
 			g_MapScript.CanPickupObject <- null;
 		}
 		if (HooksHub.Loaded)
 		{
-			printl("[HooksHub][DEBUG] Init - Setting HooksHub.CanPickupObject hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Setting HooksHub.CanPickupObject hook");
 			
 			getroottable().CanPickupObject <- ::HooksHub.CanPickupObject;
 			g_ModeScript.CanPickupObject <- ::HooksHub.CanPickupObject;
@@ -770,7 +758,7 @@ if (!("HooksHub" in getroottable()))
 			{
 				HooksHub.SetInterceptChat("L4LMODE", g_ModeScript.ModeInterceptChat);
 					
-				printl("[HooksHub][DEBUG] Init - Added g_ModeScript InterceptChat (ModeInterceptChat) hook");
+				::Left4Lib.Logger.Debug("HooksHub.Init - Added g_ModeScript InterceptChat (ModeInterceptChat) hook");
 			}
 
 			delete g_ModeScript.ModeInterceptChat;
@@ -781,7 +769,7 @@ if (!("HooksHub" in getroottable()))
 			{
 				HooksHub.SetInterceptChat("L4LMAP", g_ModeScript.MapInterceptChat);
 					
-				printl("[HooksHub][DEBUG] Init - Added g_MapScript InterceptChat (MapInterceptChat) hook");
+				::Left4Lib.Logger.Debug("HooksHub.Init - Added g_MapScript InterceptChat (MapInterceptChat) hook");
 			}
 			
 			delete g_ModeScript.MapInterceptChat;
@@ -793,7 +781,7 @@ if (!("HooksHub" in getroottable()))
 			{
 				HooksHub.SetAllowTakeDamage("L4LMODE", g_ModeScript.ModeAllowTakeDamage);
 					
-				printl("[HooksHub][DEBUG] Init - Added g_ModeScript AllowTakeDamage (ModeAllowTakeDamage) hook");
+				::Left4Lib.Logger.Debug("HooksHub.Init - Added g_ModeScript AllowTakeDamage (ModeAllowTakeDamage) hook");
 			}
 			
 			delete g_ModeScript.ModeAllowTakeDamage;
@@ -804,7 +792,7 @@ if (!("HooksHub" in getroottable()))
 			{
 				HooksHub.SetAllowTakeDamage("L4LMAP", g_ModeScript.MapAllowTakeDamage);
 					
-				printl("[HooksHub][DEBUG] Init - Added g_MapScript AllowTakeDamage (MapAllowTakeDamage) hook");
+				::Left4Lib.Logger.Debug("HooksHub.Init - Added g_MapScript AllowTakeDamage (MapAllowTakeDamage) hook");
 			}
 			
 			delete g_ModeScript.MapAllowTakeDamage;
@@ -816,7 +804,7 @@ if (!("HooksHub" in getroottable()))
 			{
 				HooksHub.SetAllowBash("L4LMODE", g_ModeScript.ModeAllowBash);
 					
-				printl("[HooksHub][DEBUG] Init - Added g_ModeScript AllowBash (ModeAllowBash) hook");
+				::Left4Lib.Logger.Debug("HooksHub.Init - Added g_ModeScript AllowBash (ModeAllowBash) hook");
 			}
 			
 			delete g_ModeScript.ModeAllowBash;
@@ -827,7 +815,7 @@ if (!("HooksHub" in getroottable()))
 			{
 				HooksHub.SetAllowBash("L4LMAP", g_ModeScript.MapAllowBash);
 					
-				printl("[HooksHub][DEBUG] Init - Added g_MapScript AllowBash (MapAllowBash) hook");
+				::Left4Lib.Logger.Debug("HooksHub.Init - Added g_MapScript AllowBash (MapAllowBash) hook");
 			}
 			
 			delete g_ModeScript.MapAllowBash;
@@ -839,7 +827,7 @@ if (!("HooksHub" in getroottable()))
 			{
 				HooksHub.SetUserConsoleCommand("L4LMODE", g_ModeScript.ModeUserConsoleCommand);
 					
-				printl("[HooksHub][DEBUG] Init - Added g_ModeScript UserConsoleCommand (ModeUserConsoleCommand) hook");
+				::Left4Lib.Logger.Debug("HooksHub.Init - Added g_ModeScript UserConsoleCommand (ModeUserConsoleCommand) hook");
 			}
 			
 			delete g_ModeScript.ModeUserConsoleCommand;
@@ -850,7 +838,7 @@ if (!("HooksHub" in getroottable()))
 			{
 				HooksHub.SetUserConsoleCommand("L4LMAP", g_ModeScript.MapUserConsoleCommand);
 					
-				printl("[HooksHub][DEBUG] Init - Added g_MapScript UserConsoleCommand (MapUserConsoleCommand) hook");
+				::Left4Lib.Logger.Debug("HooksHub.Init - Added g_MapScript UserConsoleCommand (MapUserConsoleCommand) hook");
 			}
 			
 			delete g_ModeScript.MapUserConsoleCommand;
@@ -862,7 +850,7 @@ if (!("HooksHub" in getroottable()))
 			{
 				HooksHub.SetBotQuery("L4LMODE", g_ModeScript.ModeBotQuery);
 					
-				printl("[HooksHub][DEBUG] Init - Added g_ModeScript BotQuery (ModeBotQuery) hook");
+				::Left4Lib.Logger.Debug("HooksHub.Init - Added g_ModeScript BotQuery (ModeBotQuery) hook");
 			}
 			
 			delete g_ModeScript.ModeBotQuery;
@@ -873,7 +861,7 @@ if (!("HooksHub" in getroottable()))
 			{
 				HooksHub.SetBotQuery("L4LMAP", g_ModeScript.MapBotQuery);
 					
-				printl("[HooksHub][DEBUG] Init - Added g_MapScript BotQuery (MapBotQuery) hook");
+				::Left4Lib.Logger.Debug("HooksHub.Init - Added g_MapScript BotQuery (MapBotQuery) hook");
 			}
 			
 			delete g_ModeScript.MapBotQuery;
@@ -885,7 +873,7 @@ if (!("HooksHub" in getroottable()))
 			{
 				HooksHub.SetCanPickupObject("L4LMODE", g_ModeScript.ModeCanPickupObject);
 					
-				printl("[HooksHub][DEBUG] Init - Added g_ModeScript CanPickupObject (ModeCanPickupObject) hook");
+				::Left4Lib.Logger.Debug("HooksHub.Init - Added g_ModeScript CanPickupObject (ModeCanPickupObject) hook");
 			}
 			
 			delete g_ModeScript.ModeCanPickupObject;
@@ -896,7 +884,7 @@ if (!("HooksHub" in getroottable()))
 			{
 				HooksHub.SetCanPickupObject("L4LMAP", g_ModeScript.MapCanPickupObject);
 					
-				printl("[HooksHub][DEBUG] Init - Added g_MapScript CanPickupObject (MapCanPickupObject) hook");
+				::Left4Lib.Logger.Debug("HooksHub.Init - Added g_MapScript CanPickupObject (MapCanPickupObject) hook");
 			}
 			
 			delete g_ModeScript.MapCanPickupObject;
@@ -905,14 +893,12 @@ if (!("HooksHub" in getroottable()))
 	
 	::HooksHub.Events.OnGameEvent_round_start <- function (params)
 	{
-		//printl("[HooksHub][DEBUG] OnGameEvent_round_start");
-
 		HooksHub.Init();
 		
 		HooksHub.DbgPrintFuncs();
 	}
 	
-	printl("[HooksHub][INFO] HooksHub created");
+	::Left4Lib.Logger.Info("HooksHub created");
 }
 
 __CollectEventCallbacks(::HooksHub.Events, "OnGameEvent_", "GameEventCallbacks", RegisterScriptGameEventListener);

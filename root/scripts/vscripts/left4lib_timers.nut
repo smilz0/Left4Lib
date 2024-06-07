@@ -41,7 +41,7 @@ if (!("Left4Timers" in getroottable()))
 			name = UniqueString();
 		else if (name in ::Left4Timers.Timers)
 		{
-			error("[Left4Timers][WARN] AddTimer - A timer with this name already exists: " + name + "\n");
+			::Left4Lib.Logger.Warning("Left4Timers.AddTimer - A timer with this name already exists: " + name);
 			return false;
 		}
 		
@@ -66,10 +66,7 @@ if (!("Left4Timers" in getroottable()))
 	::Left4Timers.RemoveTimer <- function(name)
 	{
 		if (!(name in ::Left4Timers.Timers))
-		{
-			//error("[Left4Timers][WARN] RemoveTimer - A timer with this name does not exist: " + name + "\n");
 			return false;
-		}
 		
 		delete ::Left4Timers.Timers[name];
 		
@@ -95,18 +92,18 @@ if (!("Left4Timers" in getroottable()))
 				}
 				catch(exception)
 				{
-					error("[Left4Timers][ERROR] Exception in timer '" + timerName + "': " + exception + " (" + timer.DbgInfo + ") - Params:\n");
-					error("[Left4Timers][ERROR] {\n");
+					::Left4Lib.Logger.Error("Left4Timers.ThinkFunc - Exception in timer '" + timerName + "': " + exception + " (" + timer.DbgInfo + ") - Params:");
+					::Left4Lib.Logger.Error(" {");
 					foreach (k, v in timer.params)
 					{
 						if (typeof v == "table")
-							error("[Left4Timers][ERROR]   " + k + " = (table)\n");
+							::Left4Lib.Logger.Error("  " + k + " = (table)");
 						else if (typeof v == "array")
-							error("[Left4Timers][ERROR]   " + k + " = (array)\n");
+							::Left4Lib.Logger.Error("  " + k + " = (array)");
 						else
-							error("[Left4Timers][ERROR]   " + k + " = " + v + "\n");
+							::Left4Lib.Logger.Error("  " + k + " = " + v);
 					}
-					error("[Left4Timers][ERROR] }\n");
+					::Left4Lib.Logger.Error(" }");
 				}
 			}
 		}
@@ -120,7 +117,7 @@ if (!("Left4Timers" in getroottable()))
 			name = UniqueString();
 		else if (name in ::Left4Timers.Thinkers)
 		{
-			error("[Left4Timers][WARN] AddThinker - A thinker with this name already exists: " + name + "\n");
+			::Left4Lib.Logger.Warning("Left4Timers.AddThinker - A thinker with this name already exists: " + name);
 			return false;
 		}
 		
@@ -139,7 +136,7 @@ if (!("Left4Timers" in getroottable()))
 		local thinkerEnt = SpawnEntityFromTable("info_target", { targetname = "left4timers_" + name });
 		if (!thinkerEnt || !thinkerEnt.IsValid())
 		{
-			error("[Left4Timers][ERROR] Failed to spawn thinker entity for thinker '" + name + "'!\n");
+			::Left4Lib.Logger.Error("Left4Timers.AddThinker - Failed to spawn thinker entity for thinker '" + name + "'!");
 			return false;
 		}
 		
@@ -162,16 +159,13 @@ if (!("Left4Timers" in getroottable()))
 	::Left4Timers.RemoveThinker <- function(name)
 	{
 		if (!(name in ::Left4Timers.Thinkers))
-		{
-			//error("[Left4Timers][WARN] RemoveThinker - A thinker with this name does not exist: " + name + "\n");
 			return false;
-		}
 		
 		local thinkerEnt = ::Left4Timers.Thinkers[name].Ent;
 		if (thinkerEnt && thinkerEnt.IsValid())
 			thinkerEnt.Kill();
 		else
-			error("[Left4Timers][WARN] RemoveThinker - Thinker '" + name + "' had no valid entity\n");
+			::Left4Lib.Logger.Warning("Left4Timers.RemoveThinker - Thinker '" + name + "' had no valid entity");
 		
 		delete ::Left4Timers.Thinkers[name];
 		
@@ -186,7 +180,7 @@ if (!("Left4Timers" in getroottable()))
 		}
 		catch(exception)
 		{
-			error("[Left4Timers][ERROR] Exception in thinker '" + ThinkerName + "': " + exception + " (" + ThinkerDbgInfo + ")\n");
+			::Left4Lib.Logger.Error("Left4Timers.ThinkerThinkFunc - Exception in thinker '" + ThinkerName + "': " + exception + " (" + ThinkerDbgInfo + ")");
 		}
 		
 		return ThinkerDelay;
@@ -203,10 +197,10 @@ if (!::Left4Timers.DummyEnt || !::Left4Timers.DummyEnt.IsValid())
 		scope["L4TThinkFunc"] <- ::Left4Timers.ThinkFunc;
 		AddThinkToEnt(::Left4Timers.DummyEnt, "L4TThinkFunc");
 			
-		printl("[Left4Timers][DEBUG] Spawned dummy entity");
+		::Left4Lib.Logger.Debug("Left4Timers - Spawned dummy entity");
 	}
 	else
-		error("[Left4Timers][ERROR] Failed to spawn dummy entity!\n");
+		::Left4Lib.Logger.Error("Left4Timers - Failed to spawn dummy entity!");
 }
 else
-	printl("[Left4Timers][DEBUG] Dummy entity already spawned");
+	::Left4Lib.Logger.Debug("Left4Timers - Dummy entity already spawned");
