@@ -89,7 +89,7 @@ if (!("ConceptsHub" in getroottable()))
 			}
 			catch(exception)
 			{
-				error("[ConceptsHub][ERROR] Exception in handler '" + key + "': " + exception + "\n");
+				::Left4Lib.Logger.Error("ConceptsHub.ConceptFunc - Exception in handler '" + key + "': " + exception);
 			}
 		}
 		
@@ -104,7 +104,7 @@ if (!("ConceptsHub" in getroottable()))
 
 	//if (Decider.AddRule(rule))
 	if (rr_AddDecisionRule(rule))
-		printl("[ConceptsHub][INFO] ConceptsHub created");
+		::Left4Lib.Logger.Info("ConceptsHub created");
 	else
-		error("[ConceptsHub][ERROR] Failed to add decision rule!!!\n");
+		::Left4Lib.Logger.Error("ConceptsHub - Failed to add decision rule!!!");
 }
