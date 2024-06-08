@@ -1219,41 +1219,41 @@ if (!("Left4Utils" in getroottable()))
 		{
 			case 1: // weapon_pistol
 			case 2: // weapon_pistol_magnum
-				return Convars.GetStr("ammo_pistol_max").tointeger();
+				return Convars.GetFloat("ammo_pistol_max").tointeger();
 			case 3: // weapon_rifle_ak47, weapon_rifle, weapon_rifle_desert, weapon_rifle_sg552
-				return Convars.GetStr("ammo_assaultrifle_max").tointeger();
+				return Convars.GetFloat("ammo_assaultrifle_max").tointeger();
 			case 4: // ???
-				return Convars.GetStr("ammo_minigun_max").tointeger();
+				return Convars.GetFloat("ammo_minigun_max").tointeger();
 			case 5: // weapon_smg_silenced, weapon_smg, weapon_smg_mp5
-				return Convars.GetStr("ammo_smg_max").tointeger();
+				return Convars.GetFloat("ammo_smg_max").tointeger();
 			case 6: // weapon_rifle_m60
-				return Convars.GetStr("ammo_m60_max").tointeger();
+				return Convars.GetFloat("ammo_m60_max").tointeger();
 			case 7: // weapon_pumpshotgun, weapon_shotgun_chrome
-				return Convars.GetStr("ammo_shotgun_max").tointeger();
+				return Convars.GetFloat("ammo_shotgun_max").tointeger();
 			case 8: // weapon_shotgun_spas, weapon_autoshotgun
-				return Convars.GetStr("ammo_autoshotgun_max").tointeger();
+				return Convars.GetFloat("ammo_autoshotgun_max").tointeger();
 			case 9: // weapon_hunting_rifle
-				return Convars.GetStr("ammo_huntingrifle_max").tointeger();
+				return Convars.GetFloat("ammo_huntingrifle_max").tointeger();
 			case 10: // weapon_sniper_military, weapon_sniper_awp, weapon_sniper_scout
-				return Convars.GetStr("ammo_sniperrifle_max").tointeger();
+				return Convars.GetFloat("ammo_sniperrifle_max").tointeger();
 			case 11: // ???
-				return Convars.GetStr("ammo_ammo_pack_max").tointeger();
+				return Convars.GetFloat("ammo_ammo_pack_max").tointeger();
 			case 12: // weapon_pipe_bomb
-				return Convars.GetStr("ammo_pipebomb_max").tointeger();
+				return Convars.GetFloat("ammo_pipebomb_max").tointeger();
 			case 13: // weapon_molotov
-				return Convars.GetStr("ammo_molotov_max").tointeger();
+				return Convars.GetFloat("ammo_molotov_max").tointeger();
 			case 14: // weapon_vomitjar
-				return Convars.GetStr("ammo_vomitjar_max").tointeger();
+				return Convars.GetFloat("ammo_vomitjar_max").tointeger();
 			case 15: // weapon_pain_pills
-				return Convars.GetStr("ammo_painpills_max").tointeger();
+				return Convars.GetFloat("ammo_painpills_max").tointeger();
 			case 16: // weapon_first_aid_kit, weapon_defibrillator, weapon_upgradepack_incendiary, weapon_upgradepack_explosive
-				return Convars.GetStr("ammo_firstaid_max").tointeger();
+				return Convars.GetFloat("ammo_firstaid_max").tointeger();
 			case 17: // weapon_grenade_launcher
-				return Convars.GetStr("ammo_grenadelauncher_max").tointeger();
+				return Convars.GetFloat("ammo_grenadelauncher_max").tointeger();
 			case 18: // weapon_adrenaline
-				return Convars.GetStr("ammo_adrenaline_max").tointeger();
+				return Convars.GetFloat("ammo_adrenaline_max").tointeger();
 			case 19: // weapon_chainsaw
-				return Convars.GetStr("ammo_chainsaw_max").tointeger();
+				return Convars.GetFloat("ammo_chainsaw_max").tointeger();
 			case 20: // weapon_fireworkcrate, weapon_oxygentank, weapon_propanetank, weapon_gascan
 				return 0; // TODO?
 		}
