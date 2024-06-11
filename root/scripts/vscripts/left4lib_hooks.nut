@@ -82,7 +82,6 @@ if (!("HooksHub" in getroottable()))
 {
 	::HooksHub <-
 	{
-		Loaded = false
 		InterceptChatFuncs = {}
 		AllowTakeDamageFuncs = {}
 		AllowBashFuncs = {}
@@ -304,6 +303,13 @@ if (!("HooksHub" in getroottable()))
 
 	::HooksHub.DbgPrintFuncs <- function ()
 	{
+		::Left4Lib.Logger.Debug("HooksHub.DbgPrintFuncs - ::HooksHub.InterceptChat = " + ::HooksHub.InterceptChat);
+		::Left4Lib.Logger.Debug("HooksHub.DbgPrintFuncs - ::HooksHub.AllowTakeDamage = " + ::HooksHub.AllowTakeDamage);
+		::Left4Lib.Logger.Debug("HooksHub.DbgPrintFuncs - ::HooksHub.AllowBash = " + ::HooksHub.AllowBash);
+		::Left4Lib.Logger.Debug("HooksHub.DbgPrintFuncs - ::HooksHub.UserConsoleCommand = " + ::HooksHub.UserConsoleCommand);
+		::Left4Lib.Logger.Debug("HooksHub.DbgPrintFuncs - ::HooksHub.BotQuery = " + ::HooksHub.BotQuery);
+		::Left4Lib.Logger.Debug("HooksHub.DbgPrintFuncs - ::HooksHub.CanPickupObject = " + ::HooksHub.CanPickupObject);
+		
 		foreach (key, val in ::HooksHub.InterceptChatFuncs)
 			::Left4Lib.Logger.Debug("HooksHub.DbgPrintFuncs - InterceptChatFuncs[" + key + "] = " + val);
 			
@@ -547,38 +553,33 @@ if (!("HooksHub" in getroottable()))
 	{
 		::Left4Lib.Logger.Debug("HooksHub.Init");
 		
+		local my_g_ModeScript = getroottable().DirectorScript.MapScript.ChallengeScript;
+		local my_g_MapScript = getroottable().DirectorScript.MapScript;
+		
 		// Setting up InterceptChat hooks
 		if ("InterceptChat" in getroottable() && getroottable().InterceptChat != null && getroottable().InterceptChat != HooksHub.InterceptChat)
 		{
 			HooksHub.SetInterceptChat("L4LROOT", getroottable().InterceptChat);
 				
 			::Left4Lib.Logger.Debug("HooksHub.Init - Added previous getroottable() InterceptChat hook");
-			
-			getroottable().InterceptChat <- ::HooksHub.InterceptChat;
 		}
-		if ("InterceptChat" in g_ModeScript && g_ModeScript.InterceptChat != null && g_ModeScript.InterceptChat != HooksHub.InterceptChat && HooksHub.GetInterceptChatByFunc(g_ModeScript.InterceptChat) == null)
+		if ("InterceptChat" in my_g_ModeScript && my_g_ModeScript.InterceptChat != null && my_g_ModeScript.InterceptChat != HooksHub.InterceptChat && HooksHub.GetInterceptChatByFunc(my_g_ModeScript.InterceptChat) == null)
 		{
-			HooksHub.SetInterceptChat("L4LMODE", g_ModeScript.InterceptChat);
+			HooksHub.SetInterceptChat("L4LMODE", my_g_ModeScript.InterceptChat);
 				
-			::Left4Lib.Logger.Debug("HooksHub.Init - Added g_ModeScript InterceptChat hook");
-			
-			g_ModeScript.InterceptChat <- null;
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added my_g_ModeScript InterceptChat hook");
 		}
-		if ("InterceptChat" in g_MapScript && g_MapScript.InterceptChat != null && g_MapScript.InterceptChat != HooksHub.InterceptChat && HooksHub.GetInterceptChatByFunc(g_MapScript.InterceptChat) == null)
+		if ("InterceptChat" in my_g_MapScript && my_g_MapScript.InterceptChat != null && my_g_MapScript.InterceptChat != HooksHub.InterceptChat && HooksHub.GetInterceptChatByFunc(my_g_MapScript.InterceptChat) == null)
 		{
-			HooksHub.SetInterceptChat("L4LMAP", g_MapScript.InterceptChat);
+			HooksHub.SetInterceptChat("L4LMAP", my_g_MapScript.InterceptChat);
 				
-			::Left4Lib.Logger.Debug("HooksHub.Init - Added g_MapScript InterceptChat hook");
-			
-			g_MapScript.InterceptChat <- null;
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added my_g_MapScript InterceptChat hook");
 		}
-		if (HooksHub.Loaded)
-		{
-			::Left4Lib.Logger.Debug("HooksHub.Init - Setting HooksHub.InterceptChat hook");
-			
-			getroottable().InterceptChat <- ::HooksHub.InterceptChat;
-			g_ModeScript.InterceptChat <- ::HooksHub.InterceptChat;
-		}
+		
+		::Left4Lib.Logger.Debug("HooksHub.Init - Setting HooksHub.InterceptChat hook");
+		getroottable().InterceptChat <- ::HooksHub.InterceptChat;
+		my_g_ModeScript.InterceptChat <- ::HooksHub.InterceptChat;
+		my_g_MapScript.InterceptChat <- ::HooksHub.InterceptChat;
 
 		// Setting up AllowTakeDamage hooks
 		if ("AllowTakeDamage" in getroottable() && getroottable().AllowTakeDamage != null && getroottable().AllowTakeDamage != HooksHub.AllowTakeDamage)
@@ -586,32 +587,24 @@ if (!("HooksHub" in getroottable()))
 			HooksHub.SetAllowTakeDamage("L4LROOT", getroottable().AllowTakeDamage);
 				
 			::Left4Lib.Logger.Debug("HooksHub.Init - Added previous getroottable() AllowTakeDamage hook");
-			
-			getroottable().AllowTakeDamage <- ::HooksHub.AllowTakeDamage;
 		}
-		if ("AllowTakeDamage" in g_ModeScript && g_ModeScript.AllowTakeDamage != null && g_ModeScript.AllowTakeDamage != HooksHub.AllowTakeDamage && HooksHub.GetAllowTakeDamageByFunc(g_ModeScript.AllowTakeDamage) == null)
+		if ("AllowTakeDamage" in my_g_ModeScript && my_g_ModeScript.AllowTakeDamage != null && my_g_ModeScript.AllowTakeDamage != HooksHub.AllowTakeDamage && HooksHub.GetAllowTakeDamageByFunc(my_g_ModeScript.AllowTakeDamage) == null)
 		{
-			HooksHub.SetAllowTakeDamage("L4LMODE", g_ModeScript.AllowTakeDamage);
+			HooksHub.SetAllowTakeDamage("L4LMODE", my_g_ModeScript.AllowTakeDamage);
 				
-			::Left4Lib.Logger.Debug("HooksHub.Init - Added g_ModeScript AllowTakeDamage hook");
-			
-			g_ModeScript.AllowTakeDamage <- null;
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added my_g_ModeScript AllowTakeDamage hook");
 		}
-		if ("AllowTakeDamage" in g_MapScript && g_MapScript.AllowTakeDamage != null && g_MapScript.AllowTakeDamage != HooksHub.AllowTakeDamage && HooksHub.GetAllowTakeDamageByFunc(g_MapScript.AllowTakeDamage) == null)
+		if ("AllowTakeDamage" in my_g_MapScript && my_g_MapScript.AllowTakeDamage != null && my_g_MapScript.AllowTakeDamage != HooksHub.AllowTakeDamage && HooksHub.GetAllowTakeDamageByFunc(my_g_MapScript.AllowTakeDamage) == null)
 		{
-			HooksHub.SetAllowTakeDamage("L4LMAP", g_MapScript.AllowTakeDamage);
+			HooksHub.SetAllowTakeDamage("L4LMAP", my_g_MapScript.AllowTakeDamage);
 				
-			::Left4Lib.Logger.Debug("HooksHub.Init - Added g_MapScript AllowTakeDamage hook");
-			
-			g_MapScript.AllowTakeDamage <- null;
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added my_g_MapScript AllowTakeDamage hook");
 		}
-		if (HooksHub.Loaded)
-		{
-			::Left4Lib.Logger.Debug("HooksHub.Init - Setting HooksHub.AllowTakeDamage hook");
-			
-			getroottable().AllowTakeDamage <- ::HooksHub.AllowTakeDamage;
-			g_ModeScript.AllowTakeDamage <- ::HooksHub.AllowTakeDamage;
-		}
+		
+		::Left4Lib.Logger.Debug("HooksHub.Init - Setting HooksHub.AllowTakeDamage hook");
+		getroottable().AllowTakeDamage <- ::HooksHub.AllowTakeDamage;
+		my_g_ModeScript.AllowTakeDamage <- ::HooksHub.AllowTakeDamage;
+		my_g_MapScript.AllowTakeDamage <- ::HooksHub.AllowTakeDamage;
 
 		// Setting up AllowBash hooks
 		if ("AllowBash" in getroottable() && getroottable().AllowBash != null && getroottable().AllowBash != HooksHub.AllowBash)
@@ -619,32 +612,24 @@ if (!("HooksHub" in getroottable()))
 			HooksHub.SetAllowBash("L4LROOT", getroottable().AllowBash);
 				
 			::Left4Lib.Logger.Debug("HooksHub.Init - Added previous getroottable() AllowBash hook");
-			
-			getroottable().AllowBash <- ::HooksHub.AllowBash;
 		}
-		if ("AllowBash" in g_ModeScript && g_ModeScript.AllowBash != null && g_ModeScript.AllowBash != HooksHub.AllowBash && HooksHub.GetAllowBashByFunc(g_ModeScript.AllowBash) == null)
+		if ("AllowBash" in my_g_ModeScript && my_g_ModeScript.AllowBash != null && my_g_ModeScript.AllowBash != HooksHub.AllowBash && HooksHub.GetAllowBashByFunc(my_g_ModeScript.AllowBash) == null)
 		{
-			HooksHub.SetAllowBash("L4LMODE", g_ModeScript.AllowBash);
+			HooksHub.SetAllowBash("L4LMODE", my_g_ModeScript.AllowBash);
 				
-			::Left4Lib.Logger.Debug("HooksHub.Init - Added g_ModeScript AllowBash hook");
-			
-			g_ModeScript.AllowBash <- null;
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added my_g_ModeScript AllowBash hook");
 		}
-		if ("AllowBash" in g_MapScript && g_MapScript.AllowBash != null && g_MapScript.AllowBash != HooksHub.AllowBash && HooksHub.GetAllowBashByFunc(g_MapScript.AllowBash) == null)
+		if ("AllowBash" in my_g_MapScript && my_g_MapScript.AllowBash != null && my_g_MapScript.AllowBash != HooksHub.AllowBash && HooksHub.GetAllowBashByFunc(my_g_MapScript.AllowBash) == null)
 		{
-			HooksHub.SetAllowBash("L4LMAP", g_MapScript.AllowBash);
+			HooksHub.SetAllowBash("L4LMAP", my_g_MapScript.AllowBash);
 				
-			::Left4Lib.Logger.Debug("HooksHub.Init - Added g_MapScript AllowBash hook");
-			
-			g_MapScript.AllowBash <- null;
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added my_g_MapScript AllowBash hook");
 		}
-		if (HooksHub.Loaded)
-		{
-			::Left4Lib.Logger.Debug("HooksHub.Init - Setting HooksHub.AllowBash hook");
-			
-			getroottable().AllowBash <- ::HooksHub.AllowBash;
-			g_ModeScript.AllowBash <- ::HooksHub.AllowBash;
-		}
+		
+		::Left4Lib.Logger.Debug("HooksHub.Init - Setting HooksHub.AllowBash hook");
+		getroottable().AllowBash <- ::HooksHub.AllowBash;
+		my_g_ModeScript.AllowBash <- ::HooksHub.AllowBash;
+		my_g_MapScript.AllowBash <- ::HooksHub.AllowBash;
 
 		// Setting up UserConsoleCommand hooks
 		if ("UserConsoleCommand" in getroottable() && getroottable().UserConsoleCommand != null && getroottable().UserConsoleCommand != HooksHub.UserConsoleCommand)
@@ -652,32 +637,24 @@ if (!("HooksHub" in getroottable()))
 			HooksHub.SetUserConsoleCommand("L4LROOT", getroottable().UserConsoleCommand);
 				
 			::Left4Lib.Logger.Debug("HooksHub.Init - Added previous getroottable() UserConsoleCommand hook");
-			
-			getroottable().UserConsoleCommand <- ::HooksHub.UserConsoleCommand;
 		}
-		if ("UserConsoleCommand" in g_ModeScript && g_ModeScript.UserConsoleCommand != null && g_ModeScript.UserConsoleCommand != HooksHub.UserConsoleCommand && HooksHub.GetUserConsoleCommandByFunc(g_ModeScript.UserConsoleCommand) == null)
+		if ("UserConsoleCommand" in my_g_ModeScript && my_g_ModeScript.UserConsoleCommand != null && my_g_ModeScript.UserConsoleCommand != HooksHub.UserConsoleCommand && HooksHub.GetUserConsoleCommandByFunc(my_g_ModeScript.UserConsoleCommand) == null)
 		{
-			HooksHub.SetUserConsoleCommand("L4LMODE", g_ModeScript.UserConsoleCommand);
+			HooksHub.SetUserConsoleCommand("L4LMODE", my_g_ModeScript.UserConsoleCommand);
 				
-			::Left4Lib.Logger.Debug("HooksHub.Init - Added g_ModeScript UserConsoleCommand hook");
-			
-			g_ModeScript.UserConsoleCommand <- null;
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added my_g_ModeScript UserConsoleCommand hook");
 		}
-		if ("UserConsoleCommand" in g_MapScript && g_MapScript.UserConsoleCommand != null && g_MapScript.UserConsoleCommand != HooksHub.UserConsoleCommand && HooksHub.GetUserConsoleCommandByFunc(g_MapScript.UserConsoleCommand) == null)
+		if ("UserConsoleCommand" in my_g_MapScript && my_g_MapScript.UserConsoleCommand != null && my_g_MapScript.UserConsoleCommand != HooksHub.UserConsoleCommand && HooksHub.GetUserConsoleCommandByFunc(my_g_MapScript.UserConsoleCommand) == null)
 		{
-			HooksHub.SetUserConsoleCommand("L4LMAP", g_MapScript.UserConsoleCommand);
+			HooksHub.SetUserConsoleCommand("L4LMAP", my_g_MapScript.UserConsoleCommand);
 				
-			::Left4Lib.Logger.Debug("HooksHub.Init - Added g_MapScript UserConsoleCommand hook");
-			
-			g_MapScript.UserConsoleCommand <- null;
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added my_g_MapScript UserConsoleCommand hook");
 		}
-		if (HooksHub.Loaded)
-		{
-			::Left4Lib.Logger.Debug("HooksHub.Init - Setting HooksHub.UserConsoleCommand hook");
-			
-			getroottable().UserConsoleCommand <- ::HooksHub.UserConsoleCommand;
-			g_ModeScript.UserConsoleCommand <- ::HooksHub.UserConsoleCommand;
-		}
+		
+		::Left4Lib.Logger.Debug("HooksHub.Init - Setting HooksHub.UserConsoleCommand hook");
+		getroottable().UserConsoleCommand <- ::HooksHub.UserConsoleCommand;
+		my_g_ModeScript.UserConsoleCommand <- ::HooksHub.UserConsoleCommand;
+		my_g_MapScript.UserConsoleCommand <- ::HooksHub.UserConsoleCommand;
 		
 		// Setting up BotQuery hooks
 		if ("BotQuery" in getroottable() && getroottable().BotQuery != null && getroottable().BotQuery != HooksHub.BotQuery)
@@ -685,32 +662,24 @@ if (!("HooksHub" in getroottable()))
 			HooksHub.SetBotQuery("L4LROOT", getroottable().BotQuery);
 				
 			::Left4Lib.Logger.Debug("HooksHub.Init - Added previous getroottable() BotQuery hook");
-			
-			getroottable().BotQuery <- ::HooksHub.BotQuery;
 		}
-		if ("BotQuery" in g_ModeScript && g_ModeScript.BotQuery != null && g_ModeScript.BotQuery != HooksHub.BotQuery && HooksHub.GetBotQueryByFunc(g_ModeScript.BotQuery) == null)
+		if ("BotQuery" in my_g_ModeScript && my_g_ModeScript.BotQuery != null && my_g_ModeScript.BotQuery != HooksHub.BotQuery && HooksHub.GetBotQueryByFunc(my_g_ModeScript.BotQuery) == null)
 		{
-			HooksHub.SetBotQuery("L4LMODE", g_ModeScript.BotQuery);
+			HooksHub.SetBotQuery("L4LMODE", my_g_ModeScript.BotQuery);
 				
-			::Left4Lib.Logger.Debug("HooksHub.Init - Added g_ModeScript BotQuery hook");
-			
-			g_ModeScript.BotQuery <- null;
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added my_g_ModeScript BotQuery hook");
 		}
-		if ("BotQuery" in g_MapScript && g_MapScript.BotQuery != null && g_MapScript.BotQuery != HooksHub.BotQuery && HooksHub.GetBotQueryByFunc(g_MapScript.BotQuery) == null)
+		if ("BotQuery" in my_g_MapScript && my_g_MapScript.BotQuery != null && my_g_MapScript.BotQuery != HooksHub.BotQuery && HooksHub.GetBotQueryByFunc(my_g_MapScript.BotQuery) == null)
 		{
-			HooksHub.SetBotQuery("L4LMAP", g_MapScript.BotQuery);
+			HooksHub.SetBotQuery("L4LMAP", my_g_MapScript.BotQuery);
 				
-			::Left4Lib.Logger.Debug("HooksHub.Init - Added g_MapScript BotQuery hook");
-			
-			g_MapScript.BotQuery <- null;
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added my_g_MapScript BotQuery hook");
 		}
-		if (HooksHub.Loaded)
-		{
-			::Left4Lib.Logger.Debug("HooksHub.Init - Setting HooksHub.BotQuery hook");
-			
-			getroottable().BotQuery <- ::HooksHub.BotQuery;
-			g_ModeScript.BotQuery <- ::HooksHub.BotQuery;
-		}
+		
+		::Left4Lib.Logger.Debug("HooksHub.Init - Setting HooksHub.BotQuery hook");
+		getroottable().BotQuery <- ::HooksHub.BotQuery;
+		my_g_ModeScript.BotQuery <- ::HooksHub.BotQuery;
+		my_g_MapScript.BotQuery <- ::HooksHub.BotQuery;
 		
 		// Setting up CanPickupObject hooks
 		if ("CanPickupObject" in getroottable() && getroottable().CanPickupObject != null && getroottable().CanPickupObject != HooksHub.CanPickupObject)
@@ -718,181 +687,208 @@ if (!("HooksHub" in getroottable()))
 			HooksHub.SetCanPickupObject("L4LROOT", getroottable().CanPickupObject);
 				
 			::Left4Lib.Logger.Debug("HooksHub.Init - Added previous getroottable() CanPickupObject hook");
-			
-			getroottable().CanPickupObject <- ::HooksHub.CanPickupObject;
 		}
-		if ("CanPickupObject" in g_ModeScript && g_ModeScript.CanPickupObject != null && g_ModeScript.CanPickupObject != HooksHub.CanPickupObject && HooksHub.GetCanPickupObjectByFunc(g_ModeScript.CanPickupObject) == null)
+		if ("CanPickupObject" in my_g_ModeScript && my_g_ModeScript.CanPickupObject != null && my_g_ModeScript.CanPickupObject != HooksHub.CanPickupObject && HooksHub.GetCanPickupObjectByFunc(my_g_ModeScript.CanPickupObject) == null)
 		{
-			HooksHub.SetCanPickupObject("L4LMODE", g_ModeScript.CanPickupObject);
+			HooksHub.SetCanPickupObject("L4LMODE", my_g_ModeScript.CanPickupObject);
 				
-			::Left4Lib.Logger.Debug("HooksHub.Init - Added g_ModeScript CanPickupObject hook");
-			
-			g_ModeScript.CanPickupObject <- null;
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added my_g_ModeScript CanPickupObject hook");
 		}
-		if ("CanPickupObject" in g_MapScript && g_MapScript.CanPickupObject != null && g_MapScript.CanPickupObject != HooksHub.CanPickupObject && HooksHub.GetCanPickupObjectByFunc(g_MapScript.CanPickupObject) == null)
+		if ("CanPickupObject" in my_g_MapScript && my_g_MapScript.CanPickupObject != null && my_g_MapScript.CanPickupObject != HooksHub.CanPickupObject && HooksHub.GetCanPickupObjectByFunc(my_g_MapScript.CanPickupObject) == null)
 		{
-			HooksHub.SetCanPickupObject("L4LMAP", g_MapScript.CanPickupObject);
+			HooksHub.SetCanPickupObject("L4LMAP", my_g_MapScript.CanPickupObject);
 				
-			::Left4Lib.Logger.Debug("HooksHub.Init - Added g_MapScript CanPickupObject hook");
-			
-			g_MapScript.CanPickupObject <- null;
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added my_g_MapScript CanPickupObject hook");
 		}
-		if (HooksHub.Loaded)
-		{
-			::Left4Lib.Logger.Debug("HooksHub.Init - Setting HooksHub.CanPickupObject hook");
-			
-			getroottable().CanPickupObject <- ::HooksHub.CanPickupObject;
-			g_ModeScript.CanPickupObject <- ::HooksHub.CanPickupObject;
-		}
-
-		HooksHub.Loaded = true;
+		
+		::Left4Lib.Logger.Debug("HooksHub.Init - Setting HooksHub.CanPickupObject hook");
+		getroottable().CanPickupObject <- ::HooksHub.CanPickupObject;
+		my_g_ModeScript.CanPickupObject <- ::HooksHub.CanPickupObject;
+		my_g_MapScript.CanPickupObject <- ::HooksHub.CanPickupObject;
 
 		// Prevent duplicate calls from VSLib...
 		
 		// P.S. Also make sure to add the "g_ModeScript.XXX" and "g_MapScript.XXX" hooks regardless the addons loading order
 		//      If L4L is loaded AFTER Admin System then "g_ModeScript.XXX" and "g_MapScript.XXX" are already gone (but they're still in ModeXXX)
 		
-		if ("ModeInterceptChat" in g_ModeScript)
+		if ("ModeInterceptChat" in my_g_ModeScript)
 		{
-			if (g_ModeScript.ModeInterceptChat != null && HooksHub.GetInterceptChatByFunc(g_ModeScript.ModeInterceptChat) == null)
+			if (my_g_ModeScript.ModeInterceptChat != null && HooksHub.GetInterceptChatByFunc(my_g_ModeScript.ModeInterceptChat) == null)
 			{
-				HooksHub.SetInterceptChat("L4LMODE", g_ModeScript.ModeInterceptChat);
+				HooksHub.SetInterceptChat("L4LMODE", my_g_ModeScript.ModeInterceptChat);
 					
-				::Left4Lib.Logger.Debug("HooksHub.Init - Added g_ModeScript InterceptChat (ModeInterceptChat) hook");
+				::Left4Lib.Logger.Debug("HooksHub.Init - Added my_g_ModeScript InterceptChat (ModeInterceptChat) hook");
 			}
 
-			delete g_ModeScript.ModeInterceptChat;
+			delete my_g_ModeScript.ModeInterceptChat;
 		}
-		if ("MapInterceptChat" in g_ModeScript)
+		if ("MapInterceptChat" in my_g_ModeScript)
 		{
-			if (g_ModeScript.MapInterceptChat != null && HooksHub.GetInterceptChatByFunc(g_ModeScript.MapInterceptChat) == null)
+			if (my_g_ModeScript.MapInterceptChat != null && HooksHub.GetInterceptChatByFunc(my_g_ModeScript.MapInterceptChat) == null)
 			{
-				HooksHub.SetInterceptChat("L4LMAP", g_ModeScript.MapInterceptChat);
+				HooksHub.SetInterceptChat("L4LMAP", my_g_ModeScript.MapInterceptChat);
 					
-				::Left4Lib.Logger.Debug("HooksHub.Init - Added g_MapScript InterceptChat (MapInterceptChat) hook");
+				::Left4Lib.Logger.Debug("HooksHub.Init - Added my_g_MapScript InterceptChat (MapInterceptChat) hook");
 			}
 			
-			delete g_ModeScript.MapInterceptChat;
+			delete my_g_ModeScript.MapInterceptChat;
 		}
 			
-		if ("ModeAllowTakeDamage" in g_ModeScript)
+		if ("ModeAllowTakeDamage" in my_g_ModeScript)
 		{
-			if (g_ModeScript.ModeAllowTakeDamage != null && HooksHub.GetAllowTakeDamageByFunc(g_ModeScript.ModeAllowTakeDamage) == null)
+			if (my_g_ModeScript.ModeAllowTakeDamage != null && HooksHub.GetAllowTakeDamageByFunc(my_g_ModeScript.ModeAllowTakeDamage) == null)
 			{
-				HooksHub.SetAllowTakeDamage("L4LMODE", g_ModeScript.ModeAllowTakeDamage);
+				HooksHub.SetAllowTakeDamage("L4LMODE", my_g_ModeScript.ModeAllowTakeDamage);
 					
-				::Left4Lib.Logger.Debug("HooksHub.Init - Added g_ModeScript AllowTakeDamage (ModeAllowTakeDamage) hook");
+				::Left4Lib.Logger.Debug("HooksHub.Init - Added my_g_ModeScript AllowTakeDamage (ModeAllowTakeDamage) hook");
 			}
 			
-			delete g_ModeScript.ModeAllowTakeDamage;
+			delete my_g_ModeScript.ModeAllowTakeDamage;
 		}
-		if ("MapAllowTakeDamage" in g_ModeScript)
+		if ("MapAllowTakeDamage" in my_g_ModeScript)
 		{
-			if (g_ModeScript.MapAllowTakeDamage != null && HooksHub.GetAllowTakeDamageByFunc(g_ModeScript.MapAllowTakeDamage) == null)
+			if (my_g_ModeScript.MapAllowTakeDamage != null && HooksHub.GetAllowTakeDamageByFunc(my_g_ModeScript.MapAllowTakeDamage) == null)
 			{
-				HooksHub.SetAllowTakeDamage("L4LMAP", g_ModeScript.MapAllowTakeDamage);
+				HooksHub.SetAllowTakeDamage("L4LMAP", my_g_ModeScript.MapAllowTakeDamage);
 					
 				::Left4Lib.Logger.Debug("HooksHub.Init - Added g_MapScript AllowTakeDamage (MapAllowTakeDamage) hook");
 			}
 			
-			delete g_ModeScript.MapAllowTakeDamage;
+			delete my_g_ModeScript.MapAllowTakeDamage;
 		}
 
-		if ("ModeAllowBash" in g_ModeScript)
+		if ("ModeAllowBash" in my_g_ModeScript)
 		{
-			if (g_ModeScript.ModeAllowBash != null && HooksHub.GetAllowBashByFunc(g_ModeScript.ModeAllowBash) == null)
+			if (my_g_ModeScript.ModeAllowBash != null && HooksHub.GetAllowBashByFunc(my_g_ModeScript.ModeAllowBash) == null)
 			{
-				HooksHub.SetAllowBash("L4LMODE", g_ModeScript.ModeAllowBash);
+				HooksHub.SetAllowBash("L4LMODE", my_g_ModeScript.ModeAllowBash);
 					
 				::Left4Lib.Logger.Debug("HooksHub.Init - Added g_ModeScript AllowBash (ModeAllowBash) hook");
 			}
 			
-			delete g_ModeScript.ModeAllowBash;
+			delete my_g_ModeScript.ModeAllowBash;
 		}
-		if ("MapAllowBash" in g_ModeScript)
+		if ("MapAllowBash" in my_g_ModeScript)
 		{
-			if (g_ModeScript.MapAllowBash != null && HooksHub.GetAllowBashByFunc(g_ModeScript.MapAllowBash) == null)
+			if (my_g_ModeScript.MapAllowBash != null && HooksHub.GetAllowBashByFunc(my_g_ModeScript.MapAllowBash) == null)
 			{
-				HooksHub.SetAllowBash("L4LMAP", g_ModeScript.MapAllowBash);
+				HooksHub.SetAllowBash("L4LMAP", my_g_ModeScript.MapAllowBash);
 					
 				::Left4Lib.Logger.Debug("HooksHub.Init - Added g_MapScript AllowBash (MapAllowBash) hook");
 			}
 			
-			delete g_ModeScript.MapAllowBash;
+			delete my_g_ModeScript.MapAllowBash;
 		}
 			
-		if ("ModeUserConsoleCommand" in g_ModeScript)
+		if ("ModeUserConsoleCommand" in my_g_ModeScript)
 		{
-			if (g_ModeScript.ModeUserConsoleCommand != null && HooksHub.GetUserConsoleCommandByFunc(g_ModeScript.ModeUserConsoleCommand) == null)
+			if (my_g_ModeScript.ModeUserConsoleCommand != null && HooksHub.GetUserConsoleCommandByFunc(my_g_ModeScript.ModeUserConsoleCommand) == null)
 			{
-				HooksHub.SetUserConsoleCommand("L4LMODE", g_ModeScript.ModeUserConsoleCommand);
+				HooksHub.SetUserConsoleCommand("L4LMODE", my_g_ModeScript.ModeUserConsoleCommand);
 					
 				::Left4Lib.Logger.Debug("HooksHub.Init - Added g_ModeScript UserConsoleCommand (ModeUserConsoleCommand) hook");
 			}
 			
-			delete g_ModeScript.ModeUserConsoleCommand;
+			delete my_g_ModeScript.ModeUserConsoleCommand;
 		}
-		if ("MapUserConsoleCommand" in g_ModeScript)
+		if ("MapUserConsoleCommand" in my_g_ModeScript)
 		{
-			if (g_ModeScript.MapUserConsoleCommand != null && HooksHub.GetUserConsoleCommandByFunc(g_ModeScript.MapUserConsoleCommand) == null)
+			if (my_g_ModeScript.MapUserConsoleCommand != null && HooksHub.GetUserConsoleCommandByFunc(my_g_ModeScript.MapUserConsoleCommand) == null)
 			{
-				HooksHub.SetUserConsoleCommand("L4LMAP", g_ModeScript.MapUserConsoleCommand);
+				HooksHub.SetUserConsoleCommand("L4LMAP", my_g_ModeScript.MapUserConsoleCommand);
 					
 				::Left4Lib.Logger.Debug("HooksHub.Init - Added g_MapScript UserConsoleCommand (MapUserConsoleCommand) hook");
 			}
 			
-			delete g_ModeScript.MapUserConsoleCommand;
+			delete my_g_ModeScript.MapUserConsoleCommand;
 		}
 			
-		if ("ModeBotQuery" in g_ModeScript)
+		if ("ModeBotQuery" in my_g_ModeScript)
 		{
-			if (g_ModeScript.ModeBotQuery != null && HooksHub.GetBotQueryByFunc(g_ModeScript.ModeBotQuery) == null)
+			if (my_g_ModeScript.ModeBotQuery != null && HooksHub.GetBotQueryByFunc(my_g_ModeScript.ModeBotQuery) == null)
 			{
-				HooksHub.SetBotQuery("L4LMODE", g_ModeScript.ModeBotQuery);
+				HooksHub.SetBotQuery("L4LMODE", my_g_ModeScript.ModeBotQuery);
 					
 				::Left4Lib.Logger.Debug("HooksHub.Init - Added g_ModeScript BotQuery (ModeBotQuery) hook");
 			}
 			
-			delete g_ModeScript.ModeBotQuery;
+			delete my_g_ModeScript.ModeBotQuery;
 		}
-		if ("MapBotQuery" in g_ModeScript)
+		if ("MapBotQuery" in my_g_ModeScript)
 		{
-			if (g_ModeScript.MapBotQuery != null && HooksHub.GetBotQueryByFunc(g_ModeScript.MapBotQuery) == null)
+			if (my_g_ModeScript.MapBotQuery != null && HooksHub.GetBotQueryByFunc(my_g_ModeScript.MapBotQuery) == null)
 			{
-				HooksHub.SetBotQuery("L4LMAP", g_ModeScript.MapBotQuery);
+				HooksHub.SetBotQuery("L4LMAP", my_g_ModeScript.MapBotQuery);
 					
 				::Left4Lib.Logger.Debug("HooksHub.Init - Added g_MapScript BotQuery (MapBotQuery) hook");
 			}
 			
-			delete g_ModeScript.MapBotQuery;
+			delete my_g_ModeScript.MapBotQuery;
 		}
 			
-		if ("ModeCanPickupObject" in g_ModeScript)
+		if ("ModeCanPickupObject" in my_g_ModeScript)
 		{
-			if (g_ModeScript.ModeCanPickupObject != null && HooksHub.GetCanPickupObjectByFunc(g_ModeScript.ModeCanPickupObject) == null)
+			if (my_g_ModeScript.ModeCanPickupObject != null && HooksHub.GetCanPickupObjectByFunc(my_g_ModeScript.ModeCanPickupObject) == null)
 			{
-				HooksHub.SetCanPickupObject("L4LMODE", g_ModeScript.ModeCanPickupObject);
+				HooksHub.SetCanPickupObject("L4LMODE", my_g_ModeScript.ModeCanPickupObject);
 					
 				::Left4Lib.Logger.Debug("HooksHub.Init - Added g_ModeScript CanPickupObject (ModeCanPickupObject) hook");
 			}
 			
-			delete g_ModeScript.ModeCanPickupObject;
+			delete my_g_ModeScript.ModeCanPickupObject;
 		}
-		if ("MapCanPickupObject" in g_ModeScript)
+		if ("MapCanPickupObject" in my_g_ModeScript)
 		{
-			if (g_ModeScript.MapCanPickupObject != null && HooksHub.GetCanPickupObjectByFunc(g_ModeScript.MapCanPickupObject) == null)
+			if (my_g_ModeScript.MapCanPickupObject != null && HooksHub.GetCanPickupObjectByFunc(my_g_ModeScript.MapCanPickupObject) == null)
 			{
-				HooksHub.SetCanPickupObject("L4LMAP", g_ModeScript.MapCanPickupObject);
+				HooksHub.SetCanPickupObject("L4LMAP", my_g_ModeScript.MapCanPickupObject);
 					
 				::Left4Lib.Logger.Debug("HooksHub.Init - Added g_MapScript CanPickupObject (MapCanPickupObject) hook");
 			}
 			
-			delete g_ModeScript.MapCanPickupObject;
+			delete my_g_ModeScript.MapCanPickupObject;
 		}
 	}
 	
+	// https://github.com/smilz0/Left4Bots/issues/96
+	/*
+		Scripts/events order of each map (excluding map restart):
+			1. scriptedmode_addon of all the addons (order seems to be the order in addonlist.txt)
+			2. director_base_addon of all the addons (same order ^)
+			3. OnGameEvent_round_start_pre_entity (only once)
+			4. scriptedmode_addon of all the addons (again)
+			5. director_base_addon of all the addons (again)
+			6. OnGameEvent_round_start_post_nav (only once)
+			7. OnGameEvent_round_start (only once)
+		
+		C++ seems to save the final vscript hooks during the call to OnActivate, which is after n. 7 on first map but between 5 and 6 on next maps, so moving HooksHub.Init in director_base_addon was always
+		working on first map (OnGameEvent_round_start being before OnActivate) but was working on next maps only if the director_base_addon order did put L4L after L4B (or any other addon that included HooksHub).
+		It didn't work with different order because the first time HooksHub.Init wouldn't run (cause HooksHub not included yet) so HooksHub.Init ran only once (but needed at least 2 with previous logic).
+		New logic only needs one HooksHub.Init run and it's moved after the first cycle of scriptedmode_addon/director_base_addon to let VSLib (and other addons) to set their hooks before they get saved and replaced by HooksHub.
+		However this will fail if other addons don't check if the hooks are already set and will replace HooksHub in the second scriptedmode_addon/director_base_addon cycle (previous logic likely had the same problem, so...).
+	*/
+	
+	// This is triggered even before the scriptedmode.nut (but only the second time, so only once per map)
+	::HooksHub.Events.OnGameEvent_round_start_pre_entity <- function (params)
+	{
+		::Left4Lib.Logger.Debug("OnGameEvent_round_start_pre_entity");
+		
+		HooksHub.Init();
+		
+		HooksHub.DbgPrintFuncs();
+	}
+	
+	// This is triggered right before round_start (but still after OnActivate after map transitions)
+	::HooksHub.Events.OnGameEvent_round_start_post_nav <- function (params)
+	{
+		::Left4Lib.Logger.Debug("OnGameEvent_round_start_post_nav");
+	}
+	
+	// Like round_start_post_nav, it's triggered after OnActivate after map transition, before only on first map
 	::HooksHub.Events.OnGameEvent_round_start <- function (params)
 	{
+		::Left4Lib.Logger.Debug("OnGameEvent_round_start");
+		
 		HooksHub.Init();
 		
 		HooksHub.DbgPrintFuncs();
