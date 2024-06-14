@@ -82,6 +82,7 @@ if (!("HooksHub" in getroottable()))
 {
 	::HooksHub <-
 	{
+		SecondRun = false
 		InterceptChatFuncs = {}
 		AllowTakeDamageFuncs = {}
 		AllowBashFuncs = {}
@@ -873,26 +874,24 @@ if (!("HooksHub" in getroottable()))
 	{
 		::Left4Lib.Logger.Debug("OnGameEvent_round_start_pre_entity");
 		
-		HooksHub.Init();
-		
-		HooksHub.DbgPrintFuncs();
+		HooksHub.SecondRun = true;
 	}
 	
 	// This is triggered right before round_start (but still after OnActivate after map transitions)
+	/*
 	::HooksHub.Events.OnGameEvent_round_start_post_nav <- function (params)
 	{
 		::Left4Lib.Logger.Debug("OnGameEvent_round_start_post_nav");
 	}
+	*/
 	
 	// Like round_start_post_nav, it's triggered after OnActivate after map transition, before only on first map
+	/*
 	::HooksHub.Events.OnGameEvent_round_start <- function (params)
 	{
 		::Left4Lib.Logger.Debug("OnGameEvent_round_start");
-		
-		HooksHub.Init();
-		
-		HooksHub.DbgPrintFuncs();
 	}
+	*/
 	
 	::Left4Lib.Logger.Info("HooksHub created");
 }

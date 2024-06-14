@@ -236,14 +236,23 @@ if (!("Left4Users" in getroottable()))
 	::Left4Users.GetUserLevel <- function (player)
 	{
 		if (!player || !player.IsValid())
+		{
+			::Left4Lib.Logger.Debug("Left4Users.GetUserLevel - player: " + player);
 			return L4U_LEVEL.User;
+		}
 		
 		local steamid = player.GetNetworkIDString();
 		if (!steamid || steamid == "BOT")
+		{
+			::Left4Lib.Logger.Debug("Left4Users.GetUserLevel - steamid: " + steamid);
 			return L4U_LEVEL.User; // player is a bot
+		}
 		
 		if (Director.IsSinglePlayerGame())
+		{
+			::Left4Lib.Logger.Debug("Left4Users.GetUserLevel - IsSinglePlayerGame");
 			return L4U_LEVEL.Admin; // It's a single player game, player is supposed to be the only user here. Will give him admin privileges
+		}
 		
 		local host = GetListenServerHost();
 		if (host && host == player)
@@ -261,6 +270,9 @@ if (!("Left4Users" in getroottable()))
 				
 				::Left4Lib.Logger.Info("Local host " + player.GetPlayerName() + " has been added to the admins list");
 			}
+			else
+				::Left4Lib.Logger.Debug("Left4Users.GetUserLevel - steamid in Admins");
+
 			return L4U_LEVEL.Admin;
 		}
 		
@@ -277,14 +289,14 @@ if (!("Left4Users" in getroottable()))
 
 	::Left4Users.PlayerJoined <- function (player)
 	{
-		//::Left4Lib.Logger.Debug("Left4Users.PlayerJoined - player: " + player.GetPlayerName());
-		
 		local userid = player.GetPlayerUserId();
 		local steamid = player.GetNetworkIDString();
 		local index = player.GetEntityIndex();
 		local level = GetUserLevel(player);
 		local tm = Director.GetTotalElapsedMissionTime();
 		local joined = false;
+		
+		::Left4Lib.Logger.Debug("Left4Users.PlayerJoined - player: " + player.GetPlayerName() + " - level: " + level);
 		
 		if ((userid in OnlineUsers) && OnlineUsers[userid].conntime <= tm)
 		{
@@ -299,6 +311,7 @@ if (!("Left4Users" in getroottable()))
 				OnlineUsers[userid].connfull = 1;
 				joined = true;
 			}
+			OnlineUsers[userid].level = level;
 		}
 		else
 		{
