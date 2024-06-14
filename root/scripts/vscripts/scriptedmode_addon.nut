@@ -71,33 +71,3 @@ function ScriptMode_Init( modename, mapname )
 
 	return true;
 }
-
-function ScriptMode_OnActivate( modename, mapname )
-{
-	printl("[L4L] ScriptMode_OnActivate");
-	
-	if ( g_ModeScript == null )
-	{
-		// Need to reload the mode script
-		// TODO: Should know exactly which script we want to load here
-		
-		g_ModeScript = getroottable().DirectorScript.MapScript.ChallengeScript
-
-		if ( IncludeScript( modename, g_ModeScript ) )
-		{
-			printl( "ScriptMode loaded " + modename + " and now Initializing" )
-		}
-	}
-		
-	if ( !SessionState.StartActive )
-	{
-		MergeSessionOptionTables()
-	}
-
-	if ( "SetupModeHUD" in g_ModeScript )
-	{
-		g_ModeScript.SetupModeHUD()
-	}
-
-	ScriptMode_SystemCall("OnActivate")
-}
