@@ -346,9 +346,9 @@ if (!("Left4Users" in getroottable()))
 				AdminNotice("\x04" + "Griefer " + player.GetPlayerName() + " joined");
 			else
 				AdminNotice("\x01" + "User " + player.GetPlayerName() + " joined");
-			
-			::Left4Users.HandleMaxHumanPlayers();
 		}
+		
+		::Left4Users.HandleMaxHumanPlayers();
 	}
 
 	::Left4Users.AdminNotice <- function (msg)
@@ -460,6 +460,17 @@ if (!("Left4Users" in getroottable()))
 		
 		SendToServerConsole("kickid " + kickid + " " + Left4Lib.Settings.users_full_kick_reason);
 		::Left4Lib.Logger.Info("Player with steam ID " + kickid + " kicked with reason: " + Left4Lib.Settings.users_full_kick_reason);
+		
+		// Must remove the kicked player from OnlineUsers to avoid multiple kick to the same player when multiple joined events in the same frame
+		foreach (userid, usr in OnlineUsers)
+		{
+			if (usr.steamid == kickid)
+			{
+				delete OnlineUsers[userid];
+				::Left4Lib.Logger.Debug("Deleted from OnlineUsers");
+				break;
+			}
+		}
 		
 		return kickid;
 	}
