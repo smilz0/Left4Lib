@@ -82,7 +82,6 @@ if (!("HooksHub" in getroottable()))
 {
 	::HooksHub <-
 	{
-		SecondRun = false
 		InterceptChatFuncs = {}
 		AllowTakeDamageFuncs = {}
 		AllowBashFuncs = {}
@@ -554,15 +553,16 @@ if (!("HooksHub" in getroottable()))
 	{
 		::Left4Lib.Logger.Debug("HooksHub.Init");
 		
-		local my_g_ModeScript = getroottable().DirectorScript.MapScript.ChallengeScript;
-		local my_g_MapScript = getroottable().DirectorScript.MapScript;
+		local my_roottable = getroottable();
+		local my_g_ModeScript = my_roottable.DirectorScript.MapScript.ChallengeScript;
+		local my_g_MapScript = my_roottable.DirectorScript.MapScript;
 		
 		// Setting up InterceptChat hooks
-		if ("InterceptChat" in getroottable() && getroottable().InterceptChat != null && getroottable().InterceptChat != HooksHub.InterceptChat)
+		if ("InterceptChat" in my_roottable && my_roottable.InterceptChat != null && my_roottable.InterceptChat != HooksHub.InterceptChat)
 		{
-			HooksHub.SetInterceptChat("L4LROOT", getroottable().InterceptChat);
+			HooksHub.SetInterceptChat("L4LROOT", my_roottable.InterceptChat);
 				
-			::Left4Lib.Logger.Debug("HooksHub.Init - Added previous getroottable() InterceptChat hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added previous my_roottable InterceptChat hook");
 		}
 		if ("InterceptChat" in my_g_ModeScript && my_g_ModeScript.InterceptChat != null && my_g_ModeScript.InterceptChat != HooksHub.InterceptChat && HooksHub.GetInterceptChatByFunc(my_g_ModeScript.InterceptChat) == null)
 		{
@@ -578,14 +578,14 @@ if (!("HooksHub" in getroottable()))
 		}
 		
 		::Left4Lib.Logger.Debug("HooksHub.Init - Setting HooksHub.InterceptChat hook");
-		getroottable().InterceptChat <- ::HooksHub.InterceptChat;
+		my_roottable.InterceptChat <- ::HooksHub.InterceptChat;
 		my_g_ModeScript.InterceptChat <- ::HooksHub.InterceptChat;
 		my_g_MapScript.InterceptChat <- ::HooksHub.InterceptChat;
 
 		// Setting up AllowTakeDamage hooks
-		if ("AllowTakeDamage" in getroottable() && getroottable().AllowTakeDamage != null && getroottable().AllowTakeDamage != HooksHub.AllowTakeDamage)
+		if ("AllowTakeDamage" in my_roottable && my_roottable.AllowTakeDamage != null && my_roottable.AllowTakeDamage != HooksHub.AllowTakeDamage)
 		{
-			HooksHub.SetAllowTakeDamage("L4LROOT", getroottable().AllowTakeDamage);
+			HooksHub.SetAllowTakeDamage("L4LROOT", my_roottable.AllowTakeDamage);
 				
 			::Left4Lib.Logger.Debug("HooksHub.Init - Added previous getroottable() AllowTakeDamage hook");
 		}
@@ -603,16 +603,16 @@ if (!("HooksHub" in getroottable()))
 		}
 		
 		::Left4Lib.Logger.Debug("HooksHub.Init - Setting HooksHub.AllowTakeDamage hook");
-		getroottable().AllowTakeDamage <- ::HooksHub.AllowTakeDamage;
+		my_roottable.AllowTakeDamage <- ::HooksHub.AllowTakeDamage;
 		my_g_ModeScript.AllowTakeDamage <- ::HooksHub.AllowTakeDamage;
 		my_g_MapScript.AllowTakeDamage <- ::HooksHub.AllowTakeDamage;
 
 		// Setting up AllowBash hooks
-		if ("AllowBash" in getroottable() && getroottable().AllowBash != null && getroottable().AllowBash != HooksHub.AllowBash)
+		if ("AllowBash" in my_roottable && my_roottable.AllowBash != null && my_roottable.AllowBash != HooksHub.AllowBash)
 		{
-			HooksHub.SetAllowBash("L4LROOT", getroottable().AllowBash);
+			HooksHub.SetAllowBash("L4LROOT", my_roottable.AllowBash);
 				
-			::Left4Lib.Logger.Debug("HooksHub.Init - Added previous getroottable() AllowBash hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added previous my_roottable AllowBash hook");
 		}
 		if ("AllowBash" in my_g_ModeScript && my_g_ModeScript.AllowBash != null && my_g_ModeScript.AllowBash != HooksHub.AllowBash && HooksHub.GetAllowBashByFunc(my_g_ModeScript.AllowBash) == null)
 		{
@@ -628,16 +628,16 @@ if (!("HooksHub" in getroottable()))
 		}
 		
 		::Left4Lib.Logger.Debug("HooksHub.Init - Setting HooksHub.AllowBash hook");
-		getroottable().AllowBash <- ::HooksHub.AllowBash;
+		my_roottable.AllowBash <- ::HooksHub.AllowBash;
 		my_g_ModeScript.AllowBash <- ::HooksHub.AllowBash;
 		my_g_MapScript.AllowBash <- ::HooksHub.AllowBash;
 
 		// Setting up UserConsoleCommand hooks
-		if ("UserConsoleCommand" in getroottable() && getroottable().UserConsoleCommand != null && getroottable().UserConsoleCommand != HooksHub.UserConsoleCommand)
+		if ("UserConsoleCommand" in my_roottable && my_roottable.UserConsoleCommand != null && my_roottable.UserConsoleCommand != HooksHub.UserConsoleCommand)
 		{
-			HooksHub.SetUserConsoleCommand("L4LROOT", getroottable().UserConsoleCommand);
+			HooksHub.SetUserConsoleCommand("L4LROOT", my_roottable.UserConsoleCommand);
 				
-			::Left4Lib.Logger.Debug("HooksHub.Init - Added previous getroottable() UserConsoleCommand hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added previous my_roottable UserConsoleCommand hook");
 		}
 		if ("UserConsoleCommand" in my_g_ModeScript && my_g_ModeScript.UserConsoleCommand != null && my_g_ModeScript.UserConsoleCommand != HooksHub.UserConsoleCommand && HooksHub.GetUserConsoleCommandByFunc(my_g_ModeScript.UserConsoleCommand) == null)
 		{
@@ -653,16 +653,16 @@ if (!("HooksHub" in getroottable()))
 		}
 		
 		::Left4Lib.Logger.Debug("HooksHub.Init - Setting HooksHub.UserConsoleCommand hook");
-		getroottable().UserConsoleCommand <- ::HooksHub.UserConsoleCommand;
+		my_roottable.UserConsoleCommand <- ::HooksHub.UserConsoleCommand;
 		my_g_ModeScript.UserConsoleCommand <- ::HooksHub.UserConsoleCommand;
 		my_g_MapScript.UserConsoleCommand <- ::HooksHub.UserConsoleCommand;
 		
 		// Setting up BotQuery hooks
-		if ("BotQuery" in getroottable() && getroottable().BotQuery != null && getroottable().BotQuery != HooksHub.BotQuery)
+		if ("BotQuery" in my_roottable && my_roottable.BotQuery != null && my_roottable.BotQuery != HooksHub.BotQuery)
 		{
-			HooksHub.SetBotQuery("L4LROOT", getroottable().BotQuery);
+			HooksHub.SetBotQuery("L4LROOT", my_roottable.BotQuery);
 				
-			::Left4Lib.Logger.Debug("HooksHub.Init - Added previous getroottable() BotQuery hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added previous my_roottable BotQuery hook");
 		}
 		if ("BotQuery" in my_g_ModeScript && my_g_ModeScript.BotQuery != null && my_g_ModeScript.BotQuery != HooksHub.BotQuery && HooksHub.GetBotQueryByFunc(my_g_ModeScript.BotQuery) == null)
 		{
@@ -678,16 +678,16 @@ if (!("HooksHub" in getroottable()))
 		}
 		
 		::Left4Lib.Logger.Debug("HooksHub.Init - Setting HooksHub.BotQuery hook");
-		getroottable().BotQuery <- ::HooksHub.BotQuery;
+		my_roottable.BotQuery <- ::HooksHub.BotQuery;
 		my_g_ModeScript.BotQuery <- ::HooksHub.BotQuery;
 		my_g_MapScript.BotQuery <- ::HooksHub.BotQuery;
 		
 		// Setting up CanPickupObject hooks
-		if ("CanPickupObject" in getroottable() && getroottable().CanPickupObject != null && getroottable().CanPickupObject != HooksHub.CanPickupObject)
+		if ("CanPickupObject" in my_roottable && my_roottable.CanPickupObject != null && my_roottable.CanPickupObject != HooksHub.CanPickupObject)
 		{
-			HooksHub.SetCanPickupObject("L4LROOT", getroottable().CanPickupObject);
+			HooksHub.SetCanPickupObject("L4LROOT", my_roottable.CanPickupObject);
 				
-			::Left4Lib.Logger.Debug("HooksHub.Init - Added previous getroottable() CanPickupObject hook");
+			::Left4Lib.Logger.Debug("HooksHub.Init - Added previous my_roottable CanPickupObject hook");
 		}
 		if ("CanPickupObject" in my_g_ModeScript && my_g_ModeScript.CanPickupObject != null && my_g_ModeScript.CanPickupObject != HooksHub.CanPickupObject && HooksHub.GetCanPickupObjectByFunc(my_g_ModeScript.CanPickupObject) == null)
 		{
@@ -703,7 +703,7 @@ if (!("HooksHub" in getroottable()))
 		}
 		
 		::Left4Lib.Logger.Debug("HooksHub.Init - Setting HooksHub.CanPickupObject hook");
-		getroottable().CanPickupObject <- ::HooksHub.CanPickupObject;
+		my_roottable.CanPickupObject <- ::HooksHub.CanPickupObject;
 		my_g_ModeScript.CanPickupObject <- ::HooksHub.CanPickupObject;
 		my_g_MapScript.CanPickupObject <- ::HooksHub.CanPickupObject;
 
@@ -851,6 +851,40 @@ if (!("HooksHub" in getroottable()))
 		}
 	}
 	
+	::HooksHub.CheckHooks <- function ()
+	{
+		local function checkHooksInTable(tbl, tblName, hookNames, err = false)
+		{
+			local n = 0;
+			foreach (hookName in hookNames)
+			{
+				if ((hookName in tbl) && tbl[hookName] != ::HooksHub[hookName])
+				{
+					if (err)
+						::Left4Lib.Logger.Error(hookName + " hook in " + tblName + " is not HooksHub." + hookName + "! Hook was set in " + tbl[hookName].getinfos().src);
+					else
+						::Left4Lib.Logger.Warning(hookName + " hook in " + tblName + " is not HooksHub." + hookName + "! Hook was set in " + tbl[hookName].getinfos().src);
+					n++;
+				}
+			}
+			return n;
+		}
+		
+		::Left4Lib.Logger.Debug("HooksHub.CheckHooks");
+		
+		local hooks = ["InterceptChat", "AllowTakeDamage", "AllowBash", "UserConsoleCommand", "BotQuery", "CanPickupObject"];
+		local errors = checkHooksInTable(getroottable(), "getroottable()", hooks);
+		errors += checkHooksInTable(getroottable().DirectorScript.MapScript.ChallengeScript, "g_ModeScript", hooks, true);
+		errors += checkHooksInTable(getroottable().DirectorScript.MapScript, "g_MapScript", hooks);
+		/*
+			NOTE:
+			C++ seems to give g_ModeScript hooks the highest priority, so at this point if roottable and g_MapScript hooks are overwritten it doesn't matter, as long as g_ModeScript hooks are OK.
+		*/
+		
+		if (errors == 0)
+			::Left4Lib.Logger.Info("HooksHub hooks OK");
+	}
+	
 	// https://github.com/smilz0/Left4Bots/issues/96
 	/*
 		Scripts/events order of each map (excluding map restart):
@@ -869,13 +903,13 @@ if (!("HooksHub" in getroottable()))
 		However this will fail if other addons don't check if the hooks are already set and will replace HooksHub in the second scriptedmode_addon/director_base_addon cycle (previous logic likely had the same problem, so...).
 	*/
 	
-	// This is triggered even before the scriptedmode.nut (but only the second time, so only once per map)
+	// This is triggered even before the scriptedmode.nut (but only the second time, so only once per map). NOTE: This is triggere before the director_base_addon(s) in map restart!
+	/*
 	::HooksHub.Events.OnGameEvent_round_start_pre_entity <- function (params)
 	{
 		::Left4Lib.Logger.Debug("OnGameEvent_round_start_pre_entity");
-		
-		HooksHub.SecondRun = true;
 	}
+	*/
 	
 	// This is triggered right before round_start (but still after OnActivate after map transitions)
 	/*
@@ -886,12 +920,12 @@ if (!("HooksHub" in getroottable()))
 	*/
 	
 	// Like round_start_post_nav, it's triggered after OnActivate after map transition, before only on first map
-	/*
 	::HooksHub.Events.OnGameEvent_round_start <- function (params)
 	{
 		::Left4Lib.Logger.Debug("OnGameEvent_round_start");
+		
+		DoEntFire("worldspawn", "RunScriptCode", "::HooksHub.CheckHooks()", 5.0, null, null);
 	}
-	*/
 	
 	::Left4Lib.Logger.Info("HooksHub created");
 }
