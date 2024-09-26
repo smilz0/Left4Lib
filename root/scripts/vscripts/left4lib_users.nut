@@ -45,7 +45,6 @@ if (!("Left4Users" in getroottable()))
 		PrevOnlineUsers = {}
 		PrevOnlineBots = {}
 		Events = {}
-		TerrorPlayerManager = null
 	}
 
 	::Left4Users.LoadUsersFromFile <- function (fileName)
@@ -287,6 +286,24 @@ if (!("Left4Users" in getroottable()))
 			return L4U_LEVEL.User;
 	}
 
+	::Left4Users.OnFistHumanConnect <- function ()
+	{
+		if (!::Left4Lib.Settings.nocrash_sb_all_bot_game || Convars.GetFloat("sb_all_bot_game") != 0)
+			return;
+		
+		Convars.SetValue("sb_all_bot_game", 1);
+		::Left4Lib.Logger.Debug("OnFistHumanConnect - sb_all_bot_game -> 1");
+	}
+
+	::Left4Users.OnLastHumanDisconnect <- function ()
+	{
+		if (!::Left4Lib.Settings.nocrash_sb_all_bot_game || Convars.GetFloat("sb_all_bot_game") == 0)
+			return;
+		
+		Convars.SetValue("sb_all_bot_game", 0);
+		::Left4Lib.Logger.Debug("OnLastHumanDisconnect - sb_all_bot_game -> 0");
+	}
+
 	::Left4Users.PlayerJoined <- function (player)
 	{
 		local userid = player.GetPlayerUserId();
@@ -297,6 +314,8 @@ if (!("Left4Users" in getroottable()))
 		local joined = false;
 		
 		::Left4Lib.Logger.Debug("Left4Users.PlayerJoined - player: " + player.GetPlayerName() + " - level: " + level);
+		
+		local prevLen = OnlineUsers.len();
 		
 		if ((userid in OnlineUsers) && OnlineUsers[userid].conntime <= tm)
 		{
@@ -349,6 +368,9 @@ if (!("Left4Users" in getroottable()))
 		}
 		
 		::Left4Users.HandleMaxHumanPlayers();
+		
+		if (prevLen == 0 && OnlineUsers.len() > 0)
+			::Left4Users.OnFistHumanConnect();
 	}
 
 	::Left4Users.AdminNotice <- function (msg)
@@ -496,7 +518,7 @@ if (!("Left4Users" in getroottable()))
 			return true; // L4U commands have at least 2 arguments ("l4u" and "command")
 		
 		if (args[0].tolower() != "!l4u")
-			return; // Not a L4U command
+			return true; // Not a L4U command
 		
 		if (GetOnlineUserLevel(speaker.GetPlayerUserId()) < L4U_LEVEL.Admin)
 		{
@@ -514,11 +536,7 @@ if (!("Left4Users" in getroottable()))
 		if (args.len() > 3)
 			arg2 = strip(args[3].tolower());
 		
-		local isCommand = OnAdminCommand(speaker, cmd, arg1, arg2);
-		if (isCommand /*&& Left4Lib.Settings.hide_chat_commands*/)
-			return false;
-		else
-			return true;
+		return !(OnAdminCommand(speaker, cmd, arg1, arg2) /*&& Left4Lib.Settings.hide_chat_commands*/)
 	}
 	
 	::Left4Users.UserConsoleCommand <- function (playerScript, arg)
@@ -716,6 +734,8 @@ if (!("Left4Users" in getroottable()))
 			return;
 		}
 
+		local prevLen = ::Left4Users.OnlineUsers.len();
+
 		local level = ::Left4Users.GetSteamIDUserLevel(steamid);
 		
 		::Left4Lib.Logger.Info("Player connected: " + name + " - userid: " + userid + " - index: " + index + " - address: " + address + " - steamid: " + steamid + " - xuid: " + xuid + " - bot: " + bot + " - level: " + level);
@@ -739,6 +759,9 @@ if (!("Left4Users" in getroottable()))
 			else
 				::Left4Users.AdminNotice("\x01" + "User " + name + " connected");
 		}
+		
+		if (prevLen == 0 && ::Left4Users.OnlineUsers.len() > 0)
+			::Left4Users.OnFistHumanConnect();
 	}
 
 	::Left4Users.Events.OnGameEvent_player_connect_full <- function (params)
@@ -801,6 +824,8 @@ if (!("Left4Users" in getroottable()))
 			return;
 		}
 
+		local prevLen = ::Left4Users.OnlineUsers.len();
+
 		if (player && player.IsValid())
 			::Left4Lib.Logger.Info("Player disconnected: " + player.GetPlayerName());
 
@@ -810,6 +835,9 @@ if (!("Left4Users" in getroottable()))
 			::Left4Lib.Logger.Warning("Left4Users - Disconnected was not in OnlineUsers!");
 		
 		//::Left4Users.SaveTempOnlineUsers();
+		
+		if (prevLen > 0 && ::Left4Users.OnlineUsers.len() == 0)
+			::Left4Users.OnLastHumanDisconnect();
 	}
 
 	::Left4Users.Events.OnGameEvent_round_end <- function (params)

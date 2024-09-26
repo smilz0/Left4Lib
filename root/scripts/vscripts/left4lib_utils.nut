@@ -2197,11 +2197,13 @@ if (!("Left4Utils" in getroottable()))
 
 		table["checkpointA"] <- null;
 		table["checkpointB"] <- null;
+		table["checkpointB_in"] <- null;
 		table["finale"] <- null;
 		table["rescueVehicle"] <- null;
 
 		local checkpointAflow = 99999;
 		local checkpointBflow = -99999;
+		local checkpointB_inflow = -99999;
 		local finaleflow = -99999;
 		local rescueVehicleflow = -99999;
 		
@@ -2227,6 +2229,12 @@ if (!("Left4Utils" in getroottable()))
 				
 				if (area.HasSpawnAttributes(NAVAREA_SPAWNATTR_CHECKPOINT))
 				{
+					if (areaflow > checkpointB_inflow /*&& area.HasSpawnAttributes(NAVAREA_SPAWNATTR_ESCAPE_ROUTE)*/)
+					{
+						table["checkpointB_in"] = area;
+						checkpointB_inflow = areaflow;
+					}
+					
 					foreach (k, adjacent in adjacentareas)
 					{
 						local adjacentflow = GetFlowDistanceForPosition(adjacent.GetCenter());

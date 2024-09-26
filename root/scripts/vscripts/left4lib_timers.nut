@@ -39,11 +39,13 @@ if (!("Left4Timers" in getroottable()))
 	{
 		if (!name || name == "")
 			name = UniqueString();
+		/* always update the timer's parameters
 		else if (name in ::Left4Timers.Timers)
 		{
 			::Left4Lib.Logger.Warning("Left4Timers.AddTimer - A timer with this name already exists: " + name);
 			return false;
 		}
+		*/
 		
 		local si = getstackinfos(2);
 		local f = "";
@@ -115,11 +117,13 @@ if (!("Left4Timers" in getroottable()))
 	{
 		if (!name || name == "")
 			name = UniqueString();
+		/* always update the thinker's parameters
 		else if (name in ::Left4Timers.Thinkers)
 		{
 			::Left4Lib.Logger.Warning("Left4Timers.AddThinker - A thinker with this name already exists: " + name);
 			return false;
 		}
+		*/
 		
 		local si = getstackinfos(2);
 		local f = "";

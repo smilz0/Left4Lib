@@ -6,6 +6,10 @@
 	// Trigger for the chat commands
 	hooks_chatcommand_trigger = "!"
 	
+	// [1/0] If 1 the player names in the chat messages from the other players will be replaced by their character names. 0 = Normal chat
+	// NOTE: If enabled, the team chat messages will turn into global chat messages
+	hooks_chat_hidenames = 0
+	
 	// Minimum log level for the addon's log lines into the console
 	// 0 = No log
 	// 1 = Only [ERROR] messages are logged
@@ -13,6 +17,10 @@
 	// 3 = [ERROR], [WARNING] and [INFO]
 	// 4 = [ERROR], [WARNING], [INFO] and [DEBUG]
 	loglevel = 3
+	
+	// [1/0] If 1 the sb_all_bot_game cvar will be automatically set to 1 when the first human player connects to the server and 0 when the last human player disconnects, regardless of the convars.txt file.
+	// This should prevent the dedicated servers crash on hibernation (as long as nothing else is setting the sb_all_bot_game cvar)
+	nocrash_sb_all_bot_game = 1
 	
 	// [1/0] Enable/Disable the "user connected"/"user joined" admin notifications
 	users_admin_notice = 1

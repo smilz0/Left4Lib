@@ -355,45 +355,67 @@ if (!("HooksHub" in getroottable()))
 				ret = false;
 		}
 
-		if (::HooksHub.ChatCommandHandlers.len() > 0 && speaker && speaker.IsValid())
+		if (speaker && speaker.IsValid())
 		{
 			// Removing the ending \r\n
 			if (msg.find("\n", msg.len() - 1) != null || msg.find("\r", msg.len() - 1) != null)
 				msg = msg.slice(0, msg.len() - 1);
 			if (msg.find("\n", msg.len() - 1) != null || msg.find("\r", msg.len() - 1) != null)
 				msg = msg.slice(0, msg.len() - 1);
-			
+				
 			local name = speaker.GetPlayerName() + ": ";
 			local text = strip(msg.slice(msg.find(name) + name.len())); // Remove the speaker's name part from the message
-			
+				
 			::Left4Lib.Logger.Debug("HooksHub.InterceptChat - speaker: " + speaker.GetPlayerName() + " - text: " + text);
 			
-			if (text.find(Left4Lib.Settings.hooks_chatcommand_trigger) == 0)
+			if (::HooksHub.ChatCommandHandlers.len() > 0)
 			{
-				local args = split(text, " ");
-				if (args.len() > 1) // Must have at least 2 arguments: "!handler command"
+				if (text.find(Left4Lib.Settings.hooks_chatcommand_trigger) == 0)
 				{
-					local handler = args[0].slice(Left4Lib.Settings.hooks_chatcommand_trigger.len());
-					local command = args[1].tolower();
-					
-					::Left4Lib.Logger.Debug("HooksHub.InterceptChat - handler: " + handler + " - command: " + command);
-					
-					if (handler in ::HooksHub.ChatCommandHandlers)
+					local args = split(text, " ");
+					if (args.len() > 1) // Must have at least 2 arguments: "!handler command"
 					{
-						try
+						local handler = args[0].slice(Left4Lib.Settings.hooks_chatcommand_trigger.len());
+						local command = args[1].tolower();
+						
+						::Left4Lib.Logger.Debug("HooksHub.InterceptChat - handler: " + handler + " - command: " + command);
+						
+						if (handler in ::HooksHub.ChatCommandHandlers)
 						{
-							::HooksHub.ChatCommandHandlers[handler](speaker, command, args, text);
-						}
-						catch(exception)
-						{
-							::Left4Lib.Logger.Error("HooksHub.InterceptChat - Exception in ChatCommandHandler '" + key + "': " + exception);
+							try
+							{
+								::HooksHub.ChatCommandHandlers[handler](speaker, command, args, text);
+							}
+							catch(exception)
+							{
+								::Left4Lib.Logger.Error("HooksHub.InterceptChat - Exception in ChatCommandHandler '" + key + "': " + exception);
+							}
 						}
 					}
+					
+					// If no InterceptChat func wanted to hide the chat, only hide it if the text starts with hooks_chatcommand_trigger and hooks_chatcommand_hide is 1
+					if (ret && ::Left4Lib.Settings.hooks_chatcommand_hide)
+						ret = false;
 				}
-				
-				// If no InterceptChat func wanted to hide the chat, only hide it if the text starts with hooks_chatcommand_trigger and hooks_chatcommand_hide is 1
-				if (ret && Left4Lib.Settings.hooks_chatcommand_hide)
-					ret = false;
+			}
+			
+			if (ret && ::Left4Lib.Settings.hooks_chat_hidenames && !IsPlayerABot(speaker) && ("Left4Users" in getroottable()))
+			{
+				::Left4Lib.Logger.Debug("HooksHub.InterceptChat - Hiding chat name");
+				ret = false;
+				local speakerUserId = speaker.GetPlayerUserId();
+				local speakerCharacterName = GetCharacterDisplayName(speaker);
+				if (!speakerCharacterName || speakerCharacterName == "")
+					speakerCharacterName = "Spectator";
+				foreach (userid, usr in ::Left4Users.OnlineUsers)
+				{
+					if (userid != speakerUserId)
+					{
+						local p = g_MapScript.GetPlayerFromUserID(userid);
+						if (p)
+							ClientPrint(p, 3, "\x03" + speakerCharacterName + "\x01 : " + text);
+					}
+				}
 			}
 		}
 		
