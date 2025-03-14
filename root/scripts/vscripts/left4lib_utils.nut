@@ -3089,7 +3089,7 @@ if (!("Left4Utils" in getroottable()))
 		if ("upgrade_" + weaponName in Left4Utils.UpgradeWeaponId)
 			return Left4Utils.UpgradeWeaponId["upgrade_" + weaponName];
 		
-		Left4Utils.WeaponId.none;
+		return Left4Utils.WeaponId.none;
 	}
 
 	// Returns the inventory slot number (0 to 4) for the weapon with the given id
@@ -3361,6 +3361,52 @@ if (!("Left4Utils" in getroottable()))
 	::Left4Utils.RandomInt <- function(min, max)
 	{
 		return min + rand() % (max + 1 - min);
+	}
+
+	::Left4Utils.ConnectNavAreas <- function(areaId1, areaId2)
+	{
+		local area1 = NavMesh.GetNavAreaByID(areaId1);
+		if (!area1 || !area1.IsValid())
+			return false;
+		
+		local area2 = NavMesh.GetNavAreaByID(areaId2);
+		if (!area2 || !area2.IsValid())
+			return false;
+		
+		area1.ConnectTo(area2, -1);
+		area2.ConnectTo(area1, -1);
+		
+		return true;
+	}
+
+	::Left4Utils.DisconnectNavAreas <- function(areaId1, areaId2)
+	{
+		local area1 = NavMesh.GetNavAreaByID(areaId1);
+		if (!area1 || !area1.IsValid())
+			return false;
+		
+		local area2 = NavMesh.GetNavAreaByID(areaId2);
+		if (!area2 || !area2.IsValid())
+			return false;
+		
+		area1.Disconnect(area2);
+		area2.Disconnect(area1);
+		
+		return true;
+	}
+	
+	::Left4Utils.SpawnNavBlockerOnNavArea <- function(areaId, teamToBlock = -1, affectsFlow = 1, startBlocked = true)
+	{
+		local area = NavMesh.GetNavAreaByID(areaId);
+		if (!area || !area.IsValid())
+			return null;
+
+		local name = "l4l_navblocker_" + area.GetID();
+		if (Entities.FindByName(null, name) != null)
+			return null;
+		
+		SpawnNavBlocker(name, area.GetCenter(), "-5 -5 -5", "5 5 5", teamToBlock, affectsFlow, startBlocked);
+		return name;	
 	}
 
 	//
