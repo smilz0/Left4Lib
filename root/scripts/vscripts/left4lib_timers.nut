@@ -24,7 +24,8 @@
 	The difference is that in this case 'yourfunction' will run in the context of a separate entity that is spawned just to run your thinker function.
 */
 
-IncludeScript("left4lib_consts");
+//IncludeScript("left4lib_consts");
+IncludeScript("left4lib_logger");
 
 if (!("Left4Timers" in getroottable()))
 {

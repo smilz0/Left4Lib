@@ -14,7 +14,8 @@ if (!("Left4Lib" in getroottable()))
 	::Left4Lib <-
 	{
 		Initialized = false
-		Logger = Left4Logger("L4L")
+		//Logger = Left4Logger("L4L")
+		Logger = ::Left4LibLogger.weakref() // ::Left4Lib.Logger should be replaced by ::Left4LibLogger everywhere, eventually
 	}
 	
 	IncludeScript("left4lib_settings");

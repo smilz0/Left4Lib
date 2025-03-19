@@ -47,3 +47,9 @@ class Left4Logger
 	_name = "";
 	_logLevel = LOG_LEVEL_INFO;
 }
+
+if (!("Left4LibLogger" in getroottable()))
+{
+	::Left4LibLogger <- Left4Logger("L4L");
+	::Left4LibLogger.Info("::Left4LibLogger created");
+}
