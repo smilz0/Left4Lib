@@ -3258,6 +3258,91 @@ if (!("Left4Utils" in getroottable()))
 		}
 	}
 
+	// Returns the "WeaponType" for the weapon with the given id
+	// https://github.com/smilz0/Left4Bots/issues/106
+	::Left4Utils.GetWeaponTypeById <- function (weaponId)
+	{
+		switch (weaponId)
+		{
+			case 2:
+			case 7:
+			case 33:
+				return "smg";
+			
+			case 3:
+			case 4:
+			case 8:
+			case 11:
+				return "shotgun";
+			
+			case 5:
+			case 9:
+			case 26:
+			case 34:
+			case 37:
+				return "rifle";
+					
+			case 6:
+			case 10:
+			case 35:
+			case 36:
+				return "sniper_rifle";
+			
+			case 21:
+				return "grenade_launcher";
+			
+			case 1:
+			case 32:
+				return "pistol";
+			
+			case 19:
+			case 101:
+			case 102:
+			case 103:
+			case 104:
+			case 105:
+			case 106:
+			case 107:
+			case 108:
+			case 109:
+			case 110:
+			case 111:
+			case 112:
+			case 113:
+			case 114:
+				return "melee";
+			
+			case 20:
+				return "chainsaw";
+			
+			case 13:
+			case 14:
+			case 25:
+				return "grenade";
+			
+			case 12:
+			case 15:
+			case 23:
+			case 24:
+				return "healing";
+			
+			case 30:
+			case 31:
+				return "upgradepack";
+			
+			case 16:
+			case 17:
+			case 18:
+			case 27:
+			case 28:
+			case 29:
+				return "carried_prop";
+			
+			default:
+				return "unknow";
+		}
+	}
+
 	::Left4Utils.HasWeaponId <- function (player, weaponid, ammoPercent = 0)
 	{
 		local slot = Left4Utils.GetWeaponSlotById(weaponid);
