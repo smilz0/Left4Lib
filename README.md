@@ -37,6 +37,13 @@ The **Friend** and **Griefer** lists are saved into the files `ems/left4lib/cfg/
 
 The players who do not belong to any of these lists are automatically given the normal **User** level.
 
+***Please note: For dedicated servers admins will need a valid ems/left4lib/cfg/admins.txt config file. By default left4lib will not create the admins.txt config file.***
+
+To generate this file, start a local game (single player), this will make you the left4lib server admin. You can then generate admins.txt with the following command, !l4u add [player/character name] admin.
+
+You can then copy this file from your local machine to your dedicated server.
+
+
 
 ### Addon settings
 L4L also has its own settings. You can find more details [HERE](https://github.com/smilz0/Left4Lib/blob/main/root/scripts/vscripts/left4lib_settings.nut).
@@ -46,8 +53,10 @@ L4L also has its own settings. You can find more details [HERE](https://github.c
 You can change the settings by editing the file `ems/left4lib/cfg/settings.txt`.
 
 
+
 ### Compatibility
 This should be fully compatible with any Admin System/VSLib version and most addons in general.
+
 
 
 ### Are you a L4D2 modder?
